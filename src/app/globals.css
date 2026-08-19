@@ -1,0 +1,563 @@
+@import "tailwindcss";
+
+/* ============================================================
+   RITUU BHATIA — DESIGN TOKENS (same system as the earlier Vite build)
+   ============================================================ */
+
+@theme {
+  --color-ivory:        #FEFEFE;
+--color-ivory-deep:   #F8F6F2;
+--color-charcoal:     #3B3060;
+--color-charcoal-soft:#4F437A;
+--color-burgundy:     #DAAA61;
+--color-burgundy-deep:#C4923F;
+--color-gold:         #DAAA61;
+--color-gold-soft:    #E8C88A;
+--color-line:         #E5DDD0;
+
+  --font-display: "Fraunces", "Iowan Old Style", serif;
+  --font-body: "Work Sans", "Helvetica Neue", sans-serif;
+  --font-label: "Space Mono", ui-monospace, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-ivory);
+  color: var(--color-charcoal);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-burgundy);
+  outline-offset: 3px;
+}
+
+.ledger-divider {
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-line) 0px,
+    var(--color-line) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+.index-tab {
+  font-family: var(--font-label);
+  letter-spacing: 0.08em;
+}
+
+/* Rendered blog content (from the WYSIWYG editor) needs its own baseline
+   spacing since Tailwind resets default <p>/<h2> margins. */
+.prose-content :where(p) { margin-bottom: 1em; }
+.prose-content :where(h2) { font-family: var(--font-display); font-size: 1.5rem; margin: 1.5em 0 0.5em; }
+.prose-content :where(h3) { font-family: var(--font-display); font-size: 1.25rem; margin: 1.25em 0 0.5em; }
+.prose-content :where(ul, ol) { margin: 0 0 1em 1.25em; }
+.prose-content :where(li) { margin-bottom: 0.4em; }
+.prose-content :where(a) { color: var(--color-burgundy); text-decoration: underline; text-underline-offset: 2px; }
+.prose-content :where(img) { border-radius: 2px; margin: 1.5em 0; }
+
+
+/* ============================================================
+   SERVICE PAGE EXTRAS — hero overlays, hover zoom, accents
+   ============================================================ */
+
+/* Full-bleed hero image container: put this on the wrapping div,
+   and put .hero-zoom on the <img> or next/image itself */
+.hero-photo {
+  position: relative;
+  overflow: hidden;
+}
+.hero-photo img {
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hero-photo:hover img {
+  transform: scale(1.04);
+}
+
+/* Bottom-to-top dark gradient so white text stays readable over any photo */
+.photo-overlay-bottom {
+  background: linear-gradient(to top, rgba(36, 31, 27, 0.85) 0%, rgba(36, 31, 27, 0.15) 55%, transparent 100%);
+}
+
+/* A short gold accent line, used above section eyebrows for extra polish */
+.accent-line {
+  width: 40px;
+  height: 2px;
+  background: var(--color-gold);
+  display: inline-block;
+}
+
+/* Gentle lift on hover for gallery/photo cards */
+.photo-card {
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+.photo-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -12px rgba(36, 31, 27, 0.25);
+}
+
+/* Quote mark decoration for testimonial blocks */
+.quote-mark::before {
+  content: "\201C";
+  font-family: var(--font-display);
+  font-size: 4rem;
+  line-height: 1;
+  color: var(--color-gold);
+  opacity: 0.4;
+  display: block;
+  margin-bottom: -1rem;
+}
+
+/* ============================================================
+   SERVICE PORTRAIT CARDS — Homepage
+   ============================================================ */
+
+.service-portrait-card {
+  display: block;
+  text-decoration: none;
+  background: var(--color-ivory);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.service-portrait-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 24px 48px -16px rgba(59, 48, 96, 0.2);
+  border-color: var(--color-gold-soft);
+}
+
+/* Image Wrapper */
+.portrait-image-wrapper {
+  position: relative;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  background: var(--color-ivory-deep);
+}
+
+/* Portrait Image */
+.portrait-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.service-portrait-card:hover .portrait-image {
+  transform: scale(1.06);
+}
+
+/* Overlay with badge */
+.portrait-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    rgba(59, 48, 96, 0.6) 0%,
+    transparent 40%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 1rem;
+}
+
+.service-portrait-card:hover .portrait-overlay {
+  opacity: 1;
+}
+
+/* FREE Badge */
+.portrait-badge {
+  background: var(--color-gold);
+  color: var(--color-ivory);
+  font-family: var(--font-label);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+  transform: translateY(-8px);
+  opacity: 0;
+  transition: all 0.4s ease;
+}
+
+.service-portrait-card:hover .portrait-badge {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Content */
+.portrait-content {
+  padding: 1.25rem 1.25rem 1.5rem;
+}
+
+/* Code + Duration */
+.portrait-code {
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--color-gold);
+  letter-spacing: 0.08em;
+  background: var(--color-ivory-deep);
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
+}
+
+.portrait-duration {
+  font-family: var(--font-label);
+  font-size: 0.65rem;
+  color: var(--color-charcoal-soft, #4F437A);
+  opacity: 0.5;
+  letter-spacing: 0.04em;
+}
+
+/* Title */
+.portrait-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--color-charcoal);
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+  transition: color 0.3s ease;
+}
+
+.service-portrait-card:hover .portrait-title {
+  color: var(--color-burgundy);
+}
+
+/* Description */
+.portrait-description {
+  font-size: 0.85rem;
+  color: var(--color-charcoal-soft, #4F437A);
+  opacity: 0.65;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+
+/* CTA */
+.portrait-cta {
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--color-burgundy);
+  letter-spacing: 0.04em;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.35s ease;
+  display: inline-block;
+}
+
+.service-portrait-card:hover .portrait-cta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 640px) {
+  .portrait-content {
+    padding: 1rem;
+  }
+  
+  .portrait-title {
+    font-size: 1rem;
+  }
+  
+  .portrait-description {
+    font-size: 0.8rem;
+  }
+}
+
+
+/* ============================================================
+   BLOG ARTICLE TYPOGRAPHY — refined prose styling
+   ============================================================ */
+
+.prose-content :where(p) {
+  margin-bottom: 1.4em;
+  font-size: 1.0625rem;
+}
+.prose-content :where(p:first-of-type) {
+  font-size: 1.25rem;
+  color: var(--color-charcoal);
+  line-height: 1.6;
+}
+.prose-content :where(h2) {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 1.75rem;
+  margin: 2em 0 0.6em;
+  color: var(--color-charcoal);
+}
+.prose-content :where(h3) {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.375rem;
+  margin: 1.75em 0 0.5em;
+}
+.prose-content :where(blockquote) {
+  border-left: 3px solid var(--color-gold);
+  padding: 0.25em 0 0.25em 1.5em;
+  margin: 2em 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.25rem;
+  color: var(--color-charcoal-soft);
+}
+.prose-content :where(img) {
+  border-radius: 4px;
+  margin: 2em 0;
+  box-shadow: 0 12px 28px -10px rgba(36, 31, 27, 0.2);
+}
+.prose-content :where(a) {
+  color: var(--color-burgundy);
+  text-decoration: underline;
+  text-decoration-color: var(--color-gold);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s ease;
+}
+.prose-content :where(a:hover) {
+  text-decoration-color: var(--color-burgundy);
+}
+.prose-content :where(strong) {
+  color: var(--color-charcoal);
+  font-weight: 600;
+}
+.prose-content :where(hr) {
+  border: none;
+  height: 1px;
+  background: var(--color-line);
+  margin: 3em 0;
+}
+
+/* ============================================================
+   TESTIMONIALS CAROUSEL
+   ============================================================ */
+
+/* Smooth transition for the slide container */
+.testimonial-track {
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Testimonial card styling */
+.testimonial-card {
+  background: var(--color-ivory);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  padding: 2rem 2.5rem;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* Decorative quote mark */
+.quote-mark-large {
+  font-family: var(--font-display);
+  font-size: 5rem;
+  line-height: 0.8;
+  color: var(--color-gold);
+  opacity: 0.15;
+  user-select: none;
+  position: absolute;
+  top: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Navigation arrows */
+.testimonial-nav-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--color-ivory);
+  border: 1px solid var(--color-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-charcoal);
+  opacity: 0.6;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.testimonial-nav-btn:hover {
+  opacity: 1;
+  color: var(--color-burgundy);
+  border-color: var(--color-burgundy);
+}
+
+/* Dots */
+.testimonial-dot {
+  display: block;
+  height: 6px;
+  border-radius: 4px;
+  background: var(--color-line);
+  transition: all 0.3s ease;
+}
+
+.testimonial-dot.active {
+  width: 32px;
+  background: var(--color-burgundy);
+}
+
+.testimonial-dot.inactive {
+  width: 16px;
+}
+
+.testimonial-dot.inactive:hover {
+  background: var(--color-charcoal);
+  opacity: 0.3;
+}
+
+/* ============================================================
+   PARALLAX FIX FOR MOBILE
+   ============================================================ */
+
+.bg-fixed {
+  background-attachment: fixed;
+}
+
+@media (max-width: 768px) {
+  .bg-fixed {
+    background-attachment: scroll !important;
+  }
+}
+
+/* ============================================================
+   VAASTU HERO SECTION
+   ============================================================ */
+
+.vaastu-card {
+  position: relative;
+  background: var(--color-ivory);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 20px 40px -12px rgba(59, 48, 96, 0.12);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vaastu-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Decorative corner accents */
+.corner-accent {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border-color: var(--color-gold);
+  opacity: 0.2;
+}
+
+.corner-accent-tl {
+  top: -6px;
+  left: -6px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+  border-radius: 4px 0 0 0;
+}
+
+.corner-accent-br {
+  bottom: -6px;
+  right: -6px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+  border-radius: 0 0 4px 0;
+}
+
+/* Stat items */
+.stat-item {
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.stat-divider {
+  width: 1px;
+  background: var(--color-line);
+  margin: 0 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .vaastu-card {
+    padding: 1.5rem;
+  }
+}
+
+/* ============================================================
+   ABOUT PAGE EXTRAS — texture, pull-quote, cert cards, image treatment
+   ============================================================ */
+
+.bg-dot-grid {
+  background-image: radial-gradient(var(--color-line) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.pull-quote {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.375rem;
+  line-height: 1.55;
+  color: var(--color-charcoal);
+  border-left: 3px solid var(--color-gold);
+  padding-left: 1.5rem;
+}
+
+.cert-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.cert-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-burgundy);
+  box-shadow: 0 16px 32px -14px rgba(107, 27, 44, 0.2);
+}
+
+/* Portrait frame with an offset gold border, a common premium-editorial touch */
+.portrait-frame {
+  position: relative;
+}
+.portrait-frame::after {
+  content: "";
+  position: absolute;
+  inset: 16px -16px -16px 16px;
+  border: 1px solid var(--color-gold);
+  z-index: -1;
+}
+
+/* Soft radial vignette used behind stat numbers on dark sections */
+.stat-glow {
+  position: relative;
+}
+.stat-glow::before {
+  content: "";
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(circle, rgba(201, 168, 104, 0.15) 0%, transparent 70%);
+  z-index: -1;
+}
