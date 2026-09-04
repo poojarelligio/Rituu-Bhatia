@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getAvailableSlots } from "@/lib/availability";
+import { getStaticServiceBySlug, getStaticServiceDurationMinutes } from "@/lib/staticServices";
 import { createRazorpayOrder } from "@/lib/razorpay";
 import { rateLimitOrError } from "@/lib/rateLimit";
+import { syncBookingToGoogleCalendar } from "@/lib/syncBookingToCalendar";
 
 const FREE_INTRO_MINUTES = 15;
 
 interface BookingBody {
   item_type?: "service" | "free_intro" | "course";
+  service_slug?: string;
   service_id?: number;
   item_id?: number;
   date?: string;
@@ -24,62 +27,61 @@ export async function POST(request: NextRequest) {
 
   const body = (await request.json()) as BookingBody;
   const itemType = body.item_type || "service";
-  const itemId = body.service_id ?? body.item_id;
   const { customer_name, customer_email, customer_phone } = body;
 
   if (!["service", "free_intro", "course"].includes(itemType)) {
     return NextResponse.json({ error: "Unknown booking type." }, { status: 400 });
   }
-  if (!itemId || !customer_name || !isEmail(customer_email) || !customer_phone) {
+  if (!customer_name || !isEmail(customer_email) || !customer_phone) {
     return NextResponse.json({ error: "Missing or invalid required fields." }, { status: 400 });
   }
 
   if (itemType === "course") {
-    return createCourseBooking(itemId, body);
+    const courseId = body.item_id ?? body.service_id;
+    if (!courseId) {
+      return NextResponse.json({ error: "Missing course." }, { status: 400 });
+    }
+    return createCourseBooking(courseId, body);
   }
 
-  // service and free_intro both need a validated date/time slot
+  const slug = body.service_slug;
+  if (!slug) {
+    return NextResponse.json({ error: "Missing service." }, { status: 400 });
+  }
+  const service = getStaticServiceBySlug(slug);
+  if (!service) {
+    return NextResponse.json({ error: "Unknown service." }, { status: 404 });
+  }
   if (!body.date || !body.time) {
     return NextResponse.json({ error: "Date and time are required." }, { status: 400 });
   }
 
-  const serviceRows = await query<{ id: number; price_amount: number }[]>(
-    "SELECT id, price_amount FROM services WHERE id = ? AND status = 'published'",
-    [itemId]
-  );
-  const service = serviceRows[0];
-  if (!service) {
-    return NextResponse.json({ error: "Unknown or unavailable service." }, { status: 404 });
-  }
+  const duration = itemType === "free_intro" ? FREE_INTRO_MINUTES : getStaticServiceDurationMinutes(slug);
 
-  const durationOverride = itemType === "free_intro" ? FREE_INTRO_MINUTES : undefined;
-  const stillAvailable = (await getAvailableSlots(body.date, itemId, durationOverride)).includes(body.time);
+  const stillAvailable = (await getAvailableSlots(body.date, duration)).includes(body.time);
   if (!stillAvailable) {
     return NextResponse.json({ error: "That time slot is no longer available. Please choose another." }, { status: 409 });
   }
 
-  if (itemType === "free_intro") {
-    const result = await query<{ insertId: number }>(
-      `INSERT INTO bookings (item_type, item_id, booking_date, booking_time, customer_name, customer_email, customer_phone, notes, amount_paise, status)
-       VALUES ('free_intro', ?, ?, ?, ?, ?, ?, ?, 0, 'CONFIRMED')`,
-      [itemId, body.date, body.time, customer_name, customer_email, customer_phone, body.notes || ""]
-    );
-    return NextResponse.json({ booking_id: result.insertId, confirmed: true, free: true });
-  }
-
-  // Paid service — amount from the server-side price, never from the request.
-  const amountPaise = service.price_amount;
-  if (!amountPaise || amountPaise <= 0) {
-    return NextResponse.json({ error: "This service does not have a price configured yet." }, { status: 500 });
-  }
-
+  // Every static service is free — confirm immediately, no payment step.
   const result = await query<{ insertId: number }>(
-    `INSERT INTO bookings (item_type, item_id, booking_date, booking_time, customer_name, customer_email, customer_phone, notes, amount_paise, status)
-     VALUES ('service', ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`,
-    [itemId, body.date, body.time, customer_name, customer_email, customer_phone, body.notes || "", amountPaise]
+    `INSERT INTO bookings (item_type, item_id, service_slug, booking_date, booking_time, customer_name, customer_email, customer_phone, notes, amount_paise, status)
+     VALUES (?, 0, ?, ?, ?, ?, ?, ?, ?, 0, 'CONFIRMED')`,
+    [itemType, slug, body.date, body.time, customer_name, customer_email, customer_phone, body.notes || ""]
   );
 
-  return createOrderResponse(result.insertId, amountPaise);
+  // Best-effort — never let a calendar hiccup fail the booking itself.
+  syncBookingToGoogleCalendar({
+    itemType,
+    serviceSlug: slug,
+    date: body.date,
+    time: body.time,
+    durationMinutes: duration,
+    customerName: customer_name,
+    customerEmail: customer_email,
+  }).catch((err) => console.error("Calendar sync failed:", err));
+
+  return NextResponse.json({ booking_id: result.insertId, confirmed: true, free: true });
 }
 
 async function createCourseBooking(courseId: number, body: BookingBody) {
@@ -103,18 +105,12 @@ async function createCourseBooking(courseId: number, body: BookingBody) {
     [courseId, body.customer_name, body.customer_email, body.customer_phone, body.notes || "", amountPaise]
   );
 
-  return createOrderResponse(result.insertId, amountPaise);
-}
-
-async function createOrderResponse(bookingId: number, amountPaise: number) {
   try {
-    const order = await createRazorpayOrder(bookingId, amountPaise);
-    await query("UPDATE bookings SET razorpay_order_id = ? WHERE id = ?", [order.order_id, bookingId]);
-    return NextResponse.json({ booking_id: bookingId, order });
+    const order = await createRazorpayOrder(result.insertId, amountPaise);
+    await query("UPDATE bookings SET razorpay_order_id = ? WHERE id = ?", [order.order_id, result.insertId]);
+    return NextResponse.json({ booking_id: result.insertId, order });
   } catch (err) {
     console.error(err);
-    // Booking stays PENDING — admin can retry from the dashboard, or the
-    // customer can re-attempt. We never silently confirm without payment.
     return NextResponse.json({ error: "Could not start payment. Please try again shortly." }, { status: 502 });
   }
 }

@@ -83,19 +83,11 @@ export default function TarotReadingPage() {
               entirely around the specific thing you&apos;re trying to decide.
             </p>
           </div>
-          <div className="lg:col-span-6 grid grid-cols-2 gap-4">
-            <div className="photo-card relative aspect-[3/4] rounded-sm overflow-hidden border border-line mt-8">
+          <div className="lg:col-span-6 gap-4">
+            <div className="photo-card relative aspect-[4/4] rounded-sm overflow-hidden border border-line mt-8">
               <Image
-                src="/images/services/tarotcards.jpg"
+                src="/images/services/tarot-card.jpg"
                 alt="Close-up of tarot cards"
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div className="photo-card relative aspect-[3/4] rounded-sm overflow-hidden border border-line">
-              <Image
-                src="/images/services/tarotcards.jpg"
-                alt="Hands laying out a tarot spread"
                 fill
                 className="object-cover"
               />
@@ -178,7 +170,7 @@ export default function TarotReadingPage() {
         </div>
       </section>
 
-      {/* Gallery strip */}
+      {/* Gallery strip
       <section className="max-w-6xl mx-auto px-6 lg:px-10 py-20">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
@@ -191,7 +183,7 @@ export default function TarotReadingPage() {
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* Final CTA with background image */}
       <section className="relative py-24 overflow-hidden">

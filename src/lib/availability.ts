@@ -29,14 +29,11 @@ export async function getAvailabilitySettings(): Promise<AvailabilitySettings> {
   };
 }
 
-async function getServiceDurationMinutes(serviceId: number, fallback: number): Promise<number> {
-  const rows = await query<{ duration: string | null }[]>("SELECT duration FROM services WHERE id = ?", [serviceId]);
-  const label = rows[0]?.duration || "";
-  const match = label.match(/(\d+)/);
-  return match ? parseInt(match[1], 10) : fallback;
-}
-
 async function getBookedTimesForDate(date: string): Promise<string[]> {
+  // Deliberately NOT filtered by which service/course this is — Rituu can
+  // only run one session at a time regardless of which service it's for,
+  // so any confirmed/pending booking on a date blocks that time slot
+  // globally across every service, course, and free session.
   const rows = await query<{ booking_time: string }[]>(
     `SELECT booking_time FROM bookings WHERE booking_date = ? AND status IN ('PENDING','CONFIRMED')`,
     [date]
@@ -45,18 +42,14 @@ async function getBookedTimesForDate(date: string): Promise<string[]> {
 }
 
 /**
- * Computes genuinely bookable time slots for a given service on a given
- * date — the single source of truth for availability, called both by the
- * public GET /api/availability endpoint (to display slots) and again by
- * POST /api/bookings (to re-validate right before creating a booking, so
- * a slot can never be double-booked in the race-condition window between
- * "browse" and "submit").
+ * Computes genuinely bookable time slots for a given date and session
+ * length — the single source of truth for availability. Duration is now
+ * passed in directly by the caller (resolved from static service data, a
+ * course's duration, or a fixed 15 minutes for a quick intro call) rather
+ * than looked up from a `services` database row, since service content is
+ * static now.
  */
-export async function getAvailableSlots(
-  date: string,
-  serviceId: number,
-  durationOverrideMinutes?: number
-): Promise<string[]> {
+export async function getAvailableSlots(date: string, durationMinutes: number): Promise<string[]> {
   const settings = await getAvailabilitySettings();
 
   const target = new Date(`${date}T00:00:00Z`);
@@ -69,7 +62,7 @@ export async function getAvailableSlots(
   const todayStr = new Date().toISOString().slice(0, 10);
   if (date < todayStr) return [];
 
-  const duration = durationOverrideMinutes ?? (await getServiceDurationMinutes(serviceId, settings.slot_minutes));
+  const duration = durationMinutes;
   const step = duration + settings.buffer_minutes;
 
   const [startH, startM] = settings.start_time.split(":").map(Number);

@@ -177,6 +177,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   id INT AUTO_INCREMENT PRIMARY KEY,
   item_type ENUM('service','free_intro','course') NOT NULL DEFAULT 'service',
   item_id INT NOT NULL,
+  service_slug VARCHAR(191) NULL COMMENT 'slug from staticServices.ts, only set for item_type service/free_intro',
   booking_date DATE NULL,
   booking_time VARCHAR(10) NULL,
   customer_name VARCHAR(191) NOT NULL,

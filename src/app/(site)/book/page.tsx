@@ -4,20 +4,7 @@ import { useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Button from "@/components/ui/Button";
 import PageHeader from "@/components/ui/PageHeader";
-import { loadRazorpayScript } from "@/lib/client/razorpay";
-
-declare global {
-  interface Window {
-    Razorpay: new (options: Record<string, unknown>) => { open: () => void };
-  }
-}
-
-interface Service {
-  id: number;
-  slug: string;
-  title: string;
-  price_display: string;
-}
+import { staticServices } from "@/lib/staticServices";
 
 function nextNDays(n: number) {
   const days: Date[] = [];
@@ -36,9 +23,12 @@ function toYMD(date: Date) {
 function BookForm() {
   const searchParams = useSearchParams();
   const preselectedSlug = searchParams.get("service");
+  const initialSlug =
+    preselectedSlug && staticServices.some((s) => s.slug === preselectedSlug)
+      ? preselectedSlug
+      : staticServices[0].slug;
 
-  const [services, setServices] = useState<Service[]>([]);
-  const [serviceId, setServiceId] = useState<number | null>(null);
+  const [serviceSlug, setServiceSlug] = useState(initialSlug);
   const [selectedDate, setSelectedDate] = useState(toYMD(new Date()));
   const [slots, setSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -49,32 +39,23 @@ function BookForm() {
   const [confirmed, setConfirmed] = useState(false);
 
   const days = useMemo(() => nextNDays(10), []);
-  const selectedService = services.find((s) => s.id === serviceId);
+  const selectedService = staticServices.find((s) => s.slug === serviceSlug);
 
   useEffect(() => {
-    fetch("/api/services").then((r) => r.json()).then((data: Service[]) => {
-      setServices(data);
-      const match = preselectedSlug ? data.find((s) => s.slug === preselectedSlug) : null;
-      setServiceId((match || data[0])?.id || null);
-    });
-  }, [preselectedSlug]);
-
-  useEffect(() => {
-    if (!serviceId) return;
     setSlotsLoading(true);
     setSelectedTime(null);
-    fetch(`/api/availability?service_id=${serviceId}&date=${selectedDate}`)
+    fetch(`/api/availability?service=${serviceSlug}&date=${selectedDate}`)
       .then((r) => r.json())
       .then((data) => setSlots(data.slots || []))
       .catch(() => setSlots([]))
       .finally(() => setSlotsLoading(false));
-  }, [serviceId, selectedDate]);
+  }, [serviceSlug, selectedDate]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
-    if (!serviceId || !selectedTime || !form.name || !form.email || !form.phone) {
+    if (!serviceSlug || !selectedTime || !form.name || !form.email || !form.phone) {
       setError("Please fill in all required fields and select a time.");
       return;
     }
@@ -86,7 +67,7 @@ function BookForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           item_type: "service",
-          service_id: serviceId,
+          service_slug: serviceSlug,
           date: selectedDate,
           time: selectedTime,
           customer_name: form.name,
@@ -101,28 +82,7 @@ function BookForm() {
         setSubmitting(false);
         return;
       }
-
-      const razorpayReady = await loadRazorpayScript();
-      if (!razorpayReady) {
-        setError("Could not load the payment gateway. Please check your connection and try again.");
-        setSubmitting(false);
-        return;
-      }
-
-      const rzp = new window.Razorpay({
-        key: data.order.key_id,
-        amount: data.order.amount,
-        currency: data.order.currency,
-        order_id: data.order.order_id,
-        name: "Rituu Bhatia",
-        description: selectedService?.title,
-        prefill: { name: form.name, email: form.email, contact: form.phone },
-        theme: { color: "#6B1B2C" },
-        handler: function () {
-          setConfirmed(true);
-        },
-      });
-      rzp.open();
+      setConfirmed(true);
     } catch {
       setError("Something went wrong creating your booking. Please try again.");
     } finally {
@@ -133,22 +93,29 @@ function BookForm() {
   if (confirmed) {
     return (
       <div className="max-w-lg mx-auto px-6 py-32 text-center">
-        <p className="font-display text-3xl mb-4">Payment received.</p>
-        <p className="text-charcoal/65 leading-relaxed">We&apos;re confirming your booking now — you&apos;ll get an email confirmation within a few minutes.</p>
+        <p className="font-display text-3xl mb-4">You&apos;re booked!</p>
+        <p className="text-charcoal/65 leading-relaxed">
+          Your free {selectedService?.title} session is confirmed for {selectedDate} at {selectedTime}.
+          You&apos;ll get an email confirmation shortly.
+        </p>
       </div>
     );
   }
 
   return (
     <>
-      <PageHeader eyebrow="BOOK A SESSION" title="Schedule your consultation" />
+      <PageHeader eyebrow="BOOK A SESSION" title="Schedule your free consultation" />
       <section className="max-w-3xl mx-auto px-6 lg:px-10 py-16">
         <form onSubmit={handleSubmit} className="space-y-10">
           <div>
             <p className="index-tab text-xs text-gold mb-3">01 · SERVICE</p>
-            <select value={serviceId || ""} onChange={(e) => setServiceId(Number(e.target.value))} className="w-full border border-line rounded-sm px-4 py-3 bg-ivory focus-visible:outline-burgundy">
-              {services.map((s) => (
-                <option key={s.id} value={s.id}>{s.title} — {s.price_display}</option>
+            <select
+              value={serviceSlug}
+              onChange={(e) => setServiceSlug(e.target.value)}
+              className="w-full border border-line rounded-sm px-4 py-3 bg-ivory focus-visible:outline-burgundy"
+            >
+              {staticServices.map((s) => (
+                <option key={s.slug} value={s.slug}>{s.title} — Free</option>
               ))}
             </select>
           </div>
@@ -160,7 +127,14 @@ function BookForm() {
                 const ymd = toYMD(d);
                 const isSelected = ymd === selectedDate;
                 return (
-                  <button type="button" key={ymd} onClick={() => setSelectedDate(ymd)} className={`shrink-0 flex flex-col items-center justify-center w-16 h-16 rounded-sm border text-sm transition-colors ${isSelected ? "bg-burgundy text-ivory border-burgundy" : "border-line text-charcoal/70 hover:border-burgundy"}`}>
+                  <button
+                    type="button"
+                    key={ymd}
+                    onClick={() => setSelectedDate(ymd)}
+                    className={`shrink-0 flex flex-col items-center justify-center w-16 h-16 rounded-sm border text-sm transition-colors ${
+                      isSelected ? "bg-burgundy text-ivory border-burgundy" : "border-line text-charcoal/70 hover:border-burgundy"
+                    }`}
+                  >
                     <span className="text-[10px] uppercase">{d.toLocaleDateString("en-IN", { weekday: "short" })}</span>
                     <span className="text-base font-medium">{d.getDate()}</span>
                   </button>
@@ -178,7 +152,14 @@ function BookForm() {
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                 {slots.map((slot) => (
-                  <button type="button" key={slot} onClick={() => setSelectedTime(slot)} className={`py-2.5 rounded-sm border text-sm transition-colors ${selectedTime === slot ? "bg-burgundy text-ivory border-burgundy" : "border-line text-charcoal/70 hover:border-burgundy"}`}>
+                  <button
+                    type="button"
+                    key={slot}
+                    onClick={() => setSelectedTime(slot)}
+                    className={`py-2.5 rounded-sm border text-sm transition-colors ${
+                      selectedTime === slot ? "bg-burgundy text-ivory border-burgundy" : "border-line text-charcoal/70 hover:border-burgundy"
+                    }`}
+                  >
                     {slot}
                   </button>
                 ))}
@@ -201,10 +182,10 @@ function BookForm() {
           <div className="flex items-center justify-between border-t border-line pt-8">
             <div>
               <p className="text-xs text-charcoal/50 uppercase tracking-wide">Total</p>
-              <p className="font-display text-2xl text-charcoal">{selectedService?.price_display || "—"}</p>
+              <p className="font-display text-2xl text-charcoal">Free</p>
             </div>
             <Button type="submit" variant="primary" disabled={submitting}>
-              {submitting ? "Processing…" : "Proceed to Payment"}
+              {submitting ? "Booking…" : "Confirm Booking"}
             </Button>
           </div>
         </form>

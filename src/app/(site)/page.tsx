@@ -7,6 +7,7 @@ import HeroCarousel from "@/components/site/HeroCarousel";
 import TestimonialSlider from "@/components/site/TestimonialSlider";
 import HappyClients from "@/components/site/HappyClients";
 import VaastuHero from "@/components/site/VaastuHero";
+import HoroscopeSection from "@/components/site/HoroscopeSection";
 import {
   getPublishedServices, getPublishedCourses, getFeaturedTestimonials,
   getSuccessStories, getUpcomingEvents, getMediaFeatures,
@@ -166,6 +167,9 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* Daily Horoscope */}
+      <HoroscopeSection />
+
       {/* Workshops */}
       {events.length > 0 && (
         <section className="bg-ivory py-24">
@@ -208,22 +212,54 @@ export default async function HomePage() {
 
       {/* Courses */}
       {courses.length > 0 && (
-        <section className="bg-ivory py-24">
-          <div className="max-w-7xl mx-auto px-6 lg:px-10">
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between">
-              <SectionHeading eyebrow="LEARN THE PRACTICE" title="Certified courses, taught properly" description="For people who want to go beyond a single session." />
-              <Button href="/courses" variant="ghost" className="mb-12 sm:mb-2">View all courses →</Button>
+        <section className="relative py-24 overflow-hidden">
+          {/* Parallax Background Image */}
+          <div className="absolute inset-0">
+            <div 
+              className="w-full h-[120%] top-[-10%] relative bg-cover bg-center bg-no-repeat"
+              style={{ 
+                backgroundImage: "url('images/bg/pageheader.jpg')",
+                backgroundAttachment: 'fixed',
+                backgroundPosition: 'center 40%',
+              }}
+            />
+            {/* Overlay - 40% opacity, leaving image 60% visible */}
+            <div className="absolute inset-0 bg-ivory/10" />
+          </div>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-10">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-12">
+              {/* Override SectionHeading colors with custom classes */}
+              <div className="[&_h2]:text-ivory [&_p]:text-gold-soft/80">
+                <SectionHeading 
+                  eyebrow="LEARN THE PRACTICE" 
+                  title="Certified courses, taught properly" 
+                  description="For people who want to go beyond a single session."
+                />
+              </div>
+              <Button href="/courses" variant="ghost" className="mb-12 sm:mb-2 text-ivory border-ivory/30 hover:bg-ivory/10">
+                View all courses →
+              </Button>
             </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {courses.slice(0, 4).map((course, i) => (
-                <Link key={course.id} href={`/courses/${course.slug}`} className="group flex items-start gap-5 border border-line rounded-sm p-7 hover:shadow-lg transition-shadow">
+                <Link 
+                  key={course.id} 
+                  href={`/courses/${course.slug}`} 
+                  className="group flex items-start gap-5 border border-line rounded-sm p-7 hover:shadow-lg transition-shadow bg-ivory/80 backdrop-blur-sm hover:bg-ivory/95"
+                >
                   <IndexTab code={course.code} index={i} />
                   <div className="flex-1">
-                    <h3 className="font-display text-xl text-charcoal mb-1 group-hover:text-burgundy transition-colors">{course.title}</h3>
+                    <h3 className="font-display text-xl text-charcoal mb-1 group-hover:text-burgundy transition-colors">
+                      {course.title}
+                    </h3>
                     <p className="text-sm text-charcoal/65 mb-3">{course.subtitle}</p>
                     <div className="flex items-center justify-between text-xs text-charcoal/50">
                       <span>{course.duration}</span>
-                      <span className="text-burgundy font-medium">{course.discount_price_display || course.price_display}</span>
+                      <span className="text-burgundy font-medium">
+                        {course.discount_price_display || course.price_display}
+                      </span>
                     </div>
                   </div>
                 </Link>
@@ -278,7 +314,7 @@ export default async function HomePage() {
         </section>
 
       {/* Final CTA */}
-      <section className="bg-burgundy text-ivory py-20">
+      {/* <section className="bg-burgundy text-ivory py-20">
         <div className="max-w-3xl mx-auto px-6 lg:px-10 text-center">
           <h2 className="font-display text-3xl sm:text-4xl font-light leading-tight mb-6">
             Ready to transform your life, space & energy?
@@ -287,7 +323,7 @@ export default async function HomePage() {
             <Button href="/book" variant="onDark">Book a Consultation</Button>
           </div>
         </div>
-      </section>
+      </section> */}
     </>
   );
 }

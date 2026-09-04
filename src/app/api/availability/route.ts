@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAvailableSlots } from "@/lib/availability";
-import { query } from "@/lib/db";
+import { getStaticServiceBySlug, getStaticServiceDurationMinutes } from "@/lib/staticServices";
 
 const FREE_INTRO_MINUTES = 15;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const serviceId = Number(searchParams.get("service_id"));
+  const slug = searchParams.get("service") || "";
   const date = searchParams.get("date") || "";
   const type = searchParams.get("type") || "service";
 
@@ -14,16 +14,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Date must be in YYYY-MM-DD format." }, { status: 400 });
   }
 
-  const rows = await query<{ id: number }[]>(
-    "SELECT id FROM services WHERE id = ? AND status = 'published'",
-    [serviceId]
-  );
-  if (!rows.length) {
+  const service = getStaticServiceBySlug(slug);
+  if (!service) {
     return NextResponse.json({ error: "Unknown service." }, { status: 404 });
   }
 
-  const durationOverride = type === "free_intro" ? FREE_INTRO_MINUTES : undefined;
-  const slots = await getAvailableSlots(date, serviceId, durationOverride);
+  const duration = type === "free_intro" ? FREE_INTRO_MINUTES : getStaticServiceDurationMinutes(slug);
+  const slots = await getAvailableSlots(date, duration);
 
-  return NextResponse.json({ date, service_id: serviceId, slots });
+  return NextResponse.json({ date, service: slug, slots });
 }

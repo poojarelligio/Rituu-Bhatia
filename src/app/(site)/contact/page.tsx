@@ -30,9 +30,54 @@ export default function ContactPage() {
       <PageHeader eyebrow="GET IN TOUCH" title="Contact" description="Questions before booking? Send a note and we'll get back within a day." />
       <section className="max-w-5xl mx-auto px-6 lg:px-10 py-16 grid grid-cols-1 md:grid-cols-5 gap-12">
         <div className="md:col-span-2 space-y-6">
-          <div className="flex items-start gap-3"><Phone size={18} className="text-burgundy mt-0.5" /><div><p className="text-sm font-medium text-charcoal">Phone</p></div></div>
-          <div className="flex items-start gap-3"><Mail size={18} className="text-burgundy mt-0.5" /><div><p className="text-sm font-medium text-charcoal">Email</p></div></div>
-          <div className="flex items-start gap-3"><MapPin size={18} className="text-burgundy mt-0.5" /><div><p className="text-sm font-medium text-charcoal">Studio</p><p className="text-sm text-charcoal/60">Vashi, Navi Mumbai</p></div></div>
+          {/* Phone */}
+          <div className="flex items-start gap-3">
+            <Phone size={18} className="text-burgundy mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-charcoal">Phone</p>
+              <a 
+                href="tel:+917021063008" 
+                className="text-sm text-charcoal/60 hover:text-burgundy transition-colors"
+              >
+                +91 70210 63008
+              </a>
+            </div>
+          </div>
+
+          {/* Email */}
+          <div className="flex items-start gap-3">
+            <Mail size={18} className="text-burgundy mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-charcoal">Email</p>
+              <div className="space-y-0.5">
+                <a 
+                  href="mailto:info@rituubhatia.in" 
+                  className="block text-sm text-charcoal/60 hover:text-burgundy transition-colors"
+                >
+                  info@rituubhatia.in
+                </a>
+                <a 
+                  href="mailto:rituubhatiasocial@gmail.com" 
+                  className="block text-sm text-charcoal/60 hover:text-burgundy transition-colors"
+                >
+                  rituubhatiasocial@gmail.com
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Address */}
+          <div className="flex items-start gap-3">
+            <MapPin size={18} className="text-burgundy mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-charcoal">Studio</p>
+              <address className="not-italic text-sm text-charcoal/60 leading-relaxed">
+                Office No: 8, 8th Floor, Arunachal Bhavan,<br />
+                Plot No. 19, Sector 30A, Vashi,<br />
+                Navi Mumbai, Maharashtra 400703
+              </address>
+            </div>
+          </div>
         </div>
         <form onSubmit={handleSubmit} className="md:col-span-3 space-y-4">
           <input required placeholder="Full name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full border border-line rounded-sm px-4 py-3 bg-ivory focus-visible:outline-burgundy" />

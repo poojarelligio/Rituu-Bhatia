@@ -147,6 +147,7 @@ export interface Booking {
   id: number;
   item_type: "service" | "free_intro" | "course";
   item_id: number;
+  service_slug: string | null;
   booking_date: string | null;
   booking_time: string | null;
   customer_name: string;

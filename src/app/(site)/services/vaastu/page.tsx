@@ -74,19 +74,11 @@ export default function VaastuPage() {
               {service?.description || "Rituu's Vaastu consultations are grounded in how a space actually functions day to day — not superstition."}
             </p>
           </div>
-          <div className="lg:col-span-6 grid grid-cols-2 gap-4">
-            <div className="photo-card relative aspect-[3/4] rounded-sm overflow-hidden border border-line mt-8">
+          <div className="lg:col-span-6  gap-4">
+            <div className="photo-card relative aspect-[4/4] rounded-sm overflow-hidden border border-line mt-8">
               <Image
                 src="/images/services/vaastu-consultation.jpg"
                 alt="Home layout analysis"
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div className="photo-card relative aspect-[3/4] rounded-sm overflow-hidden border border-line">
-              <Image
-                src="/images/services/vaastu-space.jpg"
-                alt="Space energy mapping"
                 fill
                 className="object-cover"
               />
@@ -152,7 +144,7 @@ export default function VaastuPage() {
         </div>
       </section>
 
-      {/* Gallery strip */}
+      {/* Gallery strip
       <section className="max-w-6xl mx-auto px-6 lg:px-10 py-20">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
@@ -165,7 +157,7 @@ export default function VaastuPage() {
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* Final CTA with background image */}
       <section className="relative py-24 overflow-hidden">

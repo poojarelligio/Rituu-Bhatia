@@ -134,3 +134,16 @@ export const staticServices: StaticService[] = [
 export function getStaticServiceBySlug(slug: string) {
   return staticServices.find((s) => s.slug === slug) || null;
 }
+
+/**
+ * Parses the numeric minutes out of a duration string like "45 minutes · Free".
+ * Used by the booking system to size time slots for a given service without
+ * needing a database row — since services are static content now, this is
+ * the only "duration source of truth" the booking flow needs.
+ */
+export function getStaticServiceDurationMinutes(slug: string, fallback = 30): number {
+  const service = getStaticServiceBySlug(slug);
+  if (!service) return fallback;
+  const match = service.duration.match(/(\d+)/);
+  return match ? parseInt(match[1], 10) : fallback;
+}

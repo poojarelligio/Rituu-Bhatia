@@ -20,20 +20,35 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="bg-charcoal text-ivory">
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16">
+    <footer className="relative text-ivory">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/images/bg/footer-bg.jpg')" }}
+      />
+      
+      {/* Overlay – controls image visibility */}
+      <div className="absolute inset-0 bg-charcoal/65" />
+
+      {/* Content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-10 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="md:col-span-2">
+            {/* Logo */}
             <img src="/images/logo.png" alt="Logo" className="h-12 mb-6" />
-              <p className="text-ivory/70 text-sm leading-relaxed max-w-sm">
+            <p className="text-ivory/70 text-sm leading-relaxed max-w-sm">
               Your holistic life transformation guide — Vaastu, Astrology, Tarot, Reiki, and spiritual education.
-              </p>
+            </p>
             <div className="flex items-center gap-3 mt-6">
               {settings?.whatsapp_community_link && (
-                <a href={settings.whatsapp_community_link} target="_blank" rel="noreferrer" className="index-tab text-[11px] text-ivory/70 hover:text-gold-soft transition-colors border border-ivory/20 rounded-full px-3 py-1">WhatsApp</a>
+                <a href={settings.whatsapp_community_link} target="_blank" rel="noreferrer" className="index-tab text-[11px] text-ivory/70 hover:text-gold-soft transition-colors border border-ivory/20 rounded-full px-3 py-1">
+                  WhatsApp
+                </a>
               )}
               {settings?.telegram_link && (
-                <a href={settings.telegram_link} target="_blank" rel="noreferrer" className="index-tab text-[11px] text-ivory/70 hover:text-gold-soft transition-colors border border-ivory/20 rounded-full px-3 py-1">Telegram</a>
+                <a href={settings.telegram_link} target="_blank" rel="noreferrer" className="index-tab text-[11px] text-ivory/70 hover:text-gold-soft transition-colors border border-ivory/20 rounded-full px-3 py-1">
+                  Telegram
+                </a>
               )}
             </div>
           </div>

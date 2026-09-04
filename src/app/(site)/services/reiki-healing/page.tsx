@@ -74,19 +74,11 @@ export default function ReikiHealingPage() {
               {service?.description || "A quiet, unhurried session designed to help your body and mind actually rest. Reiki with Rituu is offered as a complement to — never a replacement for — any medical or mental health care you're already receiving."}
             </p>
           </div>
-          <div className="lg:col-span-6 grid grid-cols-2 gap-4">
-            <div className="photo-card relative aspect-[3/4] rounded-sm overflow-hidden border border-line mt-8">
+          <div className="lg:col-span-6 gap-4">
+            <div className="photo-card relative aspect-[4/4] rounded-sm overflow-hidden border border-line mt-8">
               <Image
                 src="/images/services/reiki-session.jpg"
                 alt="Reiki healing session in progress"
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div className="photo-card relative aspect-[3/4] rounded-sm overflow-hidden border border-line">
-              <Image
-                src="/images/services/reiki-hands.jpg"
-                alt="Hands-on Reiki energy healing"
                 fill
                 className="object-cover"
               />
@@ -152,7 +144,7 @@ export default function ReikiHealingPage() {
         </div>
       </section>
 
-      {/* Gallery strip */}
+      {/* Gallery strip
       <section className="max-w-6xl mx-auto px-6 lg:px-10 py-20">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
@@ -165,7 +157,7 @@ export default function ReikiHealingPage() {
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* Final CTA with background image */}
       <section className="relative py-24 overflow-hidden">

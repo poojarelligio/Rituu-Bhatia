@@ -52,60 +52,38 @@ export default function VaastuHero() {
             </div>
           </div>
 
-          {/* Right Content - Stats Card */}
+          {/* Right Content - Portrait with Stats Overlay */}
           <div className="relative">
-            {/* Main Card */}
-            <div className="bg-white border border-line rounded-sm p-8 lg:p-10 shadow-xl relative z-10">
-              {/* Decorative corner accent */}
-              <div className="absolute -top-3 -right-3 w-16 h-16 border-t-2 border-r-2 border-gold/30 rounded-tr-sm"></div>
-              <div className="absolute -bottom-3 -left-3 w-16 h-16 border-b-2 border-l-2 border-gold/30 rounded-bl-sm"></div>
-
-              <div className="text-center mb-8">
-                <p className="index-tab text-xs text-gold tracking-wider mb-2">SERVICE AND CONSULTANT</p>
-                <h2 className="font-display text-2xl text-charcoal font-light">
-                  Rituu Bhatia
-                </h2>
-                <div className="flex items-center justify-center gap-2 mt-2">
-                  <span className="w-8 h-px bg-gold/40"></span>
-                  <span className="text-xs text-charcoal/40 font-label">VASTU EXPERT</span>
-                  <span className="w-8 h-px bg-gold/40"></span>
-                </div>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-4">
-                {/* Stat 1 */}
-                <div className="text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <Users className="w-5 h-5 text-gold" />
+            <div className="relative aspect-[3/4] rounded-sm overflow-hidden border border-line shadow-xl">
+              <Image
+                src="/images/home/rituut-vaastu.jpg"
+                alt="Rituu Bhatia - Vaastu Expert"
+                fill
+                className="object-cover"
+                priority
+              />
+              
+              {/* Dark overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/20 to-transparent"></div>
+              
+              {/* Stats overlay on image */}
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="font-display text-2xl text-gold-soft">10,000+</p>
+                    <p className="text-[10px] text-ivory/60 font-label tracking-wider uppercase">Happy Clients</p>
                   </div>
-                  <p className="font-display text-2xl text-charcoal font-light">10,000+</p>
-                  <p className="text-[10px] text-charcoal/40 font-label tracking-wider uppercase">Happy Clients</p>
-                </div>
-
-                {/* Stat 2 */}
-                <div className="text-center border-x border-line">
-                  <div className="flex items-center justify-center mb-2">
-                    <Calendar className="w-5 h-5 text-gold" />
+                  <div className="border-x border-ivory/20">
+                    <p className="font-display text-2xl text-gold-soft">12+</p>
+                    <p className="text-[10px] text-ivory/60 font-label tracking-wider uppercase">Years Experience</p>
                   </div>
-                  <p className="font-display text-2xl text-charcoal font-light">12+</p>
-                  <p className="text-[10px] text-charcoal/40 font-label tracking-wider uppercase">Years of Experience</p>
-                </div>
-
-                {/* Stat 3 */}
-                <div className="text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <Sparkles className="w-5 h-5 text-gold" />
+                  <div>
+                    <p className="font-display text-2xl text-gold-soft">Expert</p>
+                    <p className="text-[10px] text-ivory/60 font-label tracking-wider uppercase">Vastu Knowledge</p>
                   </div>
-                  <p className="font-display text-2xl text-charcoal font-light">Expert</p>
-                  <p className="text-[10px] text-charcoal/40 font-label tracking-wider uppercase">Deep Knowledge in Vastu</p>
                 </div>
               </div>
             </div>
-
-            {/* Decorative floating elements */}
-            <div className="absolute -top-6 -right-6 w-24 h-24 border border-gold/10 rounded-full z-0"></div>
-            <div className="absolute -bottom-6 -left-6 w-32 h-32 border border-gold/10 rounded-full z-0"></div>
           </div>
         </div>
 

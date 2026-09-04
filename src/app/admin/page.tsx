@@ -21,7 +21,7 @@ export default async function AdminDashboardPage() {
   ]);
 
   const cards = [
-    { label: "Services", value: services, href: "/admin/services" },
+    // { label: "Services", value: services, href: "/admin/services" },
     { label: "Courses", value: courses, href: "/admin/courses" },
     { label: "Total Bookings", value: bookings, href: "/admin/bookings" },
     { label: "Pending Bookings", value: pendingBookings, href: "/admin/bookings", highlight: pendingBookings > 0 },
