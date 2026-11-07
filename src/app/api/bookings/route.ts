@@ -4,7 +4,6 @@ import { getAvailableSlots } from "@/lib/availability";
 import { getStaticServiceBySlug, getStaticServiceDurationMinutes } from "@/lib/staticServices";
 import { createRazorpayOrder } from "@/lib/razorpay";
 import { rateLimitOrError } from "@/lib/rateLimit";
-import { syncBookingToGoogleCalendar } from "@/lib/syncBookingToCalendar";
 
 const FREE_INTRO_MINUTES = 15;
 
@@ -44,6 +43,16 @@ export async function POST(request: NextRequest) {
     return createCourseBooking(courseId, body);
   }
 
+  // Free intro call — no payment
+  if (itemType === "free_intro") {
+    return createFreeIntroBooking(body);
+  }
+
+  // Paid service booking — ₹99
+  return createServiceBooking(body);
+}
+
+async function createServiceBooking(body: BookingBody) {
   const slug = body.service_slug;
   if (!slug) {
     return NextResponse.json({ error: "Missing service." }, { status: 400 });
@@ -56,30 +65,74 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Date and time are required." }, { status: 400 });
   }
 
-  const duration = itemType === "free_intro" ? FREE_INTRO_MINUTES : getStaticServiceDurationMinutes(slug);
+  // ✅ Price comes from staticServices.ts, not from the request body
+  const amountPaise = service.price_amount;
+  if (!amountPaise || amountPaise <= 0) {
+    return NextResponse.json({ error: "This service does not have a price configured." }, { status: 500 });
+  }
 
+  const duration = getStaticServiceDurationMinutes(slug);
   const stillAvailable = (await getAvailableSlots(body.date, duration)).includes(body.time);
   if (!stillAvailable) {
     return NextResponse.json({ error: "That time slot is no longer available. Please choose another." }, { status: 409 });
   }
 
-  // Every static service is free — confirm immediately, no payment step.
+  // Insert PENDING booking
   const result = await query<{ insertId: number }>(
     `INSERT INTO bookings (item_type, item_id, service_slug, booking_date, booking_time, customer_name, customer_email, customer_phone, notes, amount_paise, status)
-     VALUES (?, 0, ?, ?, ?, ?, ?, ?, ?, 0, 'CONFIRMED')`,
-    [itemType, slug, body.date, body.time, customer_name, customer_email, customer_phone, body.notes || ""]
+     VALUES ('service', 0, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`,
+    [
+      slug,
+      body.date,
+      body.time,
+      body.customer_name,
+      body.customer_email,
+      body.customer_phone,
+      body.notes || "",
+      amountPaise,
+    ]
   );
 
-  // Best-effort — never let a calendar hiccup fail the booking itself.
-  syncBookingToGoogleCalendar({
-    itemType,
-    serviceSlug: slug,
-    date: body.date,
-    time: body.time,
-    durationMinutes: duration,
-    customerName: customer_name,
-    customerEmail: customer_email,
-  }).catch((err) => console.error("Calendar sync failed:", err));
+  try {
+    const order = await createRazorpayOrder(result.insertId, amountPaise);
+    await query("UPDATE bookings SET razorpay_order_id = ? WHERE id = ?", [order.order_id, result.insertId]);
+    return NextResponse.json({
+      booking_id: result.insertId,
+      order,
+      requires_payment: true,
+    });
+  } catch (err) {
+    console.error("Razorpay order creation failed:", err);
+    // Clean up the pending booking if Razorpay fails
+    await query("DELETE FROM bookings WHERE id = ?", [result.insertId]).catch(() => undefined);
+    return NextResponse.json({ error: "Could not start payment. Please try again shortly." }, { status: 502 });
+  }
+}
+
+async function createFreeIntroBooking(body: BookingBody) {
+  const slug = body.service_slug || "free-intro";
+  if (!body.date || !body.time) {
+    return NextResponse.json({ error: "Date and time are required." }, { status: 400 });
+  }
+
+  const stillAvailable = (await getAvailableSlots(body.date, FREE_INTRO_MINUTES)).includes(body.time);
+  if (!stillAvailable) {
+    return NextResponse.json({ error: "That time slot is no longer available. Please choose another." }, { status: 409 });
+  }
+
+  const result = await query<{ insertId: number }>(
+    `INSERT INTO bookings (item_type, item_id, service_slug, booking_date, booking_time, customer_name, customer_email, customer_phone, notes, amount_paise, status)
+     VALUES ('free_intro', 0, ?, ?, ?, ?, ?, ?, ?, 0, 'CONFIRMED')`,
+    [
+      slug,
+      body.date,
+      body.time,
+      body.customer_name,
+      body.customer_email,
+      body.customer_phone,
+      body.notes || "",
+    ]
+  );
 
   return NextResponse.json({ booking_id: result.insertId, confirmed: true, free: true });
 }
@@ -108,7 +161,7 @@ async function createCourseBooking(courseId: number, body: BookingBody) {
   try {
     const order = await createRazorpayOrder(result.insertId, amountPaise);
     await query("UPDATE bookings SET razorpay_order_id = ? WHERE id = ?", [order.order_id, result.insertId]);
-    return NextResponse.json({ booking_id: result.insertId, order });
+    return NextResponse.json({ booking_id: result.insertId, order, requires_payment: true });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Could not start payment. Please try again shortly." }, { status: 502 });

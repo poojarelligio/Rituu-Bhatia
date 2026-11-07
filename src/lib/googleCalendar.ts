@@ -98,7 +98,7 @@ export async function getGoogleCalendarStatus() {
  * expired (access tokens last ~1 hour; the refresh_token is long-lived and
  * lets us silently mint new ones without asking Rituu to reconnect).
  */
-async function getValidAccessToken(): Promise<string | null> {
+   export async function getValidAccessToken(): Promise<string | null> {
   const rows = await query<ConnectionRow[]>("SELECT * FROM google_calendar_connection WHERE id = 1");
   const row = rows[0];
   if (!row?.refresh_token) return null; // not connected

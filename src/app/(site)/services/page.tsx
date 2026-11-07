@@ -1,90 +1,100 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
-import { ArrowUpRight, Sparkles } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
-import IndexTab from "@/components/ui/IndexTab";
-
-// Static data directly in the page – no external file
-const staticServices = [
-  {
-    slug: "tarot-reading",
-    code: "TR",
-    title: "Tarot Reading",
-    tagline: "Clarity on the decision in front of you, read card by card.",
-    heroImage: "/images/services/tarotcards.jpg",
-    duration: "45 minutes · Free",
-  },
-  {
-    slug: "vaastu",
-    code: "VA",
-    title: "Vaastu Consultation",
-    tagline: "Practical, non-disruptive changes to how your space supports you.",
-    heroImage: "/images/services/vaastu.jpg",
-    duration: "60 minutes · Free",
-  },
-  {
-    slug: "astrology",
-    code: "AS",
-    title: "Astrology Reading",
-    tagline: "A grounded look at your chart and what it means for this season of life.",
-    heroImage: "/images/services/astro.jpg",
-    duration: "60 minutes · Free",
-  },
-  {
-    slug: "reiki-healing",
-    code: "RE",
-    title: "Reiki Healing",
-    tagline: "A hands-on energy session for stress, fatigue, or feeling stuck.",
-    heroImage: "/images/services/reiki.jpg",
-    duration: "45 minutes · Free",
-  },
-];
+import ServicesExplorer from "@/components/services/ServicesExplorer";
 
 export const metadata: Metadata = {
   title: "Services",
-  description: "Tarot, Vaastu, Astrology, and Reiki — every session is free.",
+  description:
+    "Vaastu, Tarot Card, Astrology, Reiki, Signature and Logo Customisation — different questions, different paths to clarity. Book a session from just ₹99.",
 };
 
 export default function ServicesPage() {
   return (
     <>
+      {/* Banner – unchanged */}
       <PageHeader
         eyebrow="THE PRACTICE"
         title="Services"
-        description="Four practices, one promise — every session is completely free."
+        description="Four practices, two customised services, one place to find clarity."
       />
-      <section className="max-w-6xl mx-auto px-6 lg:px-10 py-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {staticServices.map((service, i) => (
+
+      {/* Intro with soft colour glow */}
+      <section className="relative overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-24 -top-20 h-80 w-80 rounded-full bg-gold/25 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 top-10 h-96 w-96 rounded-full bg-violet/15 blur-3xl"
+        />
+        <div className="relative mx-auto max-w-2xl px-6 pt-20 text-center lg:px-10">
+          <h2 className="mb-6 font-display text-3xl leading-tight text-charcoal md:text-5xl">
+            Different questions.{" "}
+            <span className="bg-gradient-to-r from-charcoal via-violet to-gold-deep bg-clip-text text-transparent">
+              Different paths to clarity.
+            </span>
+          </h2>
+          <div className="space-y-2 leading-relaxed text-charcoal/70">
+            <p>Sometimes the question is about your home.</p>
+            <p>Sometimes it&apos;s your career, relationship or business.</p>
+            <p>Sometimes, you simply feel that something needs to change.</p>
+          </div>
+          <p className="mt-6 leading-relaxed text-charcoal/70">
+            Rituu&apos;s work brings together Vaastu, Tarot Card, Astrology and Reiki — four different
+            practices that can offer perspective, insight and a deeper understanding of your
+            journey.
+          </p>
+          <p className="mt-4 leading-relaxed text-charcoal/70">
+            Beyond these, she also helps you shape the details that represent you — a customised
+            Signature and a meaningful Logo for your business.
+          </p>
+          <div className="mx-auto mt-8 flex items-center justify-center gap-3">
+            <span className="h-px w-12 bg-gold" />
+            <p className="font-display text-lg text-gold-deep">
+              Explore the practice that speaks to your question.
+            </p>
+            <span className="h-px w-12 bg-gold" />
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive picker + cards */}
+      <ServicesExplorer />
+
+      {/* The Difference – dark highlighted band */}
+      <section className="px-6 pb-24 lg:px-10">
+        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-ink via-ink-mid to-ink px-8 py-16 text-center text-white md:px-16 md:py-20">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full bg-gold/25 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-violet/30 blur-3xl"
+          />
+
+          <div className="relative">
+            <p className="mb-4 text-xs uppercase tracking-[0.3em] text-gold">The Difference</p>
+            <h2 className="mb-6 font-display text-3xl leading-tight md:text-5xl">
+              One question. One conversation. Your journey.
+            </h2>
+            <p className="mx-auto max-w-xl leading-relaxed text-white/75">
+              You don&apos;t always know which practice is right for you — and you don&apos;t have
+              to.
+            </p>
+            <p className="mx-auto mt-2 max-w-xl leading-relaxed text-white/75">
+              If you&apos;re unsure whether you need Vaastu, Tarot Card, Astrology or Reiki, start with
+              your question.
+            </p>
             <Link
-              key={service.slug}
-              href={`/services/${service.slug}`}
-              className="group relative flex flex-col bg-ivory border border-line rounded-sm overflow-hidden hover:shadow-lg transition-shadow"
+              href="/contact"
+              className="mt-9 inline-flex items-center gap-2 rounded-full bg-gold px-8 py-3.5 text-sm font-semibold text-ink transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_40px_-8px_var(--color-gold)]"
             >
-              <div className="relative aspect-[16/10] overflow-hidden bg-ivory-deep">
-                <Image
-                  src={service.heroImage}
-                  alt={service.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <span className="absolute top-4 right-4 inline-flex items-center gap-1 text-[11px] font-medium text-burgundy bg-ivory rounded-full px-2.5 py-1 shadow-sm">
-                  <Sparkles size={11} /> FREE
-                </span>
-              </div>
-              <div className="p-7 flex-1 flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <IndexTab code={service.code} index={i} />
-                  <ArrowUpRight size={18} className="text-charcoal/30 group-hover:text-burgundy transition-colors" />
-                </div>
-                <h3 className="font-display text-2xl text-charcoal mb-2">{service.title}</h3>
-                <p className="text-sm text-charcoal/65 leading-relaxed flex-1">{service.tagline}</p>
-                <div className="ledger-divider my-5" />
-                <span className="text-xs text-charcoal/50">{service.duration}</span>
-              </div>
+              Talk to Rituu <span aria-hidden>→</span>
             </Link>
-          ))}
+          </div>
         </div>
       </section>
     </>

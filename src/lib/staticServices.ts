@@ -10,26 +10,30 @@ export interface StaticService {
   benefits: string[];
   process: { title: string; description: string }[];
   duration: string;
+  price_display: string;
+  price_amount: number;
 }
 
 export const staticServices: StaticService[] = [
   {
-    slug: "tarot-reading",
+    slug: "tarot-card-reading",
     code: "TR",
-    title: "Tarot Reading",
+    title: "Tarot Card Reading",
     tagline: "Clarity on the decision in front of you, read card by card.",
     heroImage: "/images/services/tarotcards.jpg",
-    description: "A tarot session with Rituu isn't a performance — it's a focused conversation using the cards as a mirror. You bring the real question; she reads what's actually there and helps you see the path forward clearly.",
-    duration: "45 minutes · Free",
+    description: "A tarot card session with Rituu isn't a performance — it's a focused conversation using the cards as a mirror. You bring the real question; she reads what's actually there and helps you see the path forward clearly.",
+    duration: "30 minutes",
+    price_display: "₹99",
+    price_amount: 9900,
     stats: [
       { value: "1,200+", label: "Readings Given" },
       { value: "12+", label: "Years Reading" },
-      { value: "4.9/5", label: "Average Rating" },
+      // { value: "4.9/5", label: "Average Rating" },
     ],
     audience: [
       "Anyone facing a decision they keep going back and forth on",
       "People who want a second, non-judgmental perspective",
-      "Those curious about tarot who've never had a reading before",
+      "Those curious about tarot card who've never had a reading before",
     ],
     benefits: [
       "A clear read on the situation as it stands today",
@@ -49,7 +53,9 @@ export const staticServices: StaticService[] = [
     tagline: "Practical, non-disruptive changes to how your space supports you.",
     heroImage: "/images/services/vaastu.jpg",
     description: "Rituu's Vaastu consultations are grounded in how a space actually functions day to day — not superstition. Expect a room-by-room read of your home or office and a short list of changes you can realistically make.",
-    duration: "60 minutes · Free",
+    duration: "30 minutes",
+    price_display: "₹99",
+    price_amount: 9900,
     stats: [
       { value: "600+", label: "Spaces Consulted" },
       { value: "12+", label: "Years of Practice" },
@@ -78,11 +84,13 @@ export const staticServices: StaticService[] = [
     tagline: "A grounded look at your chart and what it means for this season of life.",
     heroImage: "/images/services/astro.jpg",
     description: "No fear-based framing, no vague predictions — Rituu reads your chart against the actual questions you bring in, whether that's timing a decision, understanding a pattern, or just making sense of a hard year.",
-    duration: "60 minutes · Free",
+    duration: "30 minutes",
+    price_display: "₹99",
+    price_amount: 9900,
     stats: [
       { value: "900+", label: "Charts Read" },
       { value: "12+", label: "Years of Practice" },
-      { value: "4.8/5", label: "Average Rating" },
+      // { value: "4.8/5", label: "Average Rating" },
     ],
     audience: [
       "Anyone at a career or relationship crossroads",
@@ -107,11 +115,13 @@ export const staticServices: StaticService[] = [
     tagline: "A hands-on energy session for stress, fatigue, or feeling stuck.",
     heroImage: "/images/services/reiki.jpg",
     description: "A quiet, unhurried session designed to help your body and mind actually rest. Reiki with Rituu is offered as a complement to — never a replacement for — any medical or mental health care you're already receiving.",
-    duration: "45 minutes · Free",
+    duration: "30 minutes",
+    price_display: "₹99",
+    price_amount: 9900,
     stats: [
       { value: "800+", label: "Sessions Held" },
       { value: "12+", label: "Years Practicing" },
-      { value: "4.9/5", label: "Average Rating" },
+      // { value: "4.9/5", label: "Average Rating" },
     ],
     audience: [
       "Anyone dealing with ongoing stress or fatigue",
@@ -119,7 +129,7 @@ export const staticServices: StaticService[] = [
       "Those preparing for a high-stress period ahead",
     ],
     benefits: [
-      "A genuinely restful 45 minutes",
+      "A genuinely restful 30 minutes",
       "Support alongside — not instead of — medical care",
       "Useful before high-stress periods",
     ],
@@ -136,7 +146,7 @@ export function getStaticServiceBySlug(slug: string) {
 }
 
 /**
- * Parses the numeric minutes out of a duration string like "45 minutes · Free".
+ * Parses the numeric minutes out of a duration string like "30 minutes · Free".
  * Used by the booking system to size time slots for a given service without
  * needing a database row — since services are static content now, this is
  * the only "duration source of truth" the booking flow needs.

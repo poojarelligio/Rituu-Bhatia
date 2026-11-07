@@ -17,7 +17,7 @@ export default function CourseEnrollButton({
   const [show, setShow] = useState(false);
   return (
     <>
-      <Button variant={variant} onClick={() => setShow(true)}>Enroll &amp; Pay</Button>
+      <Button variant={variant} onClick={() => setShow(true)}>Enquire Now</Button>
       {show && <CourseEnrollModal courseId={courseId} courseTitle={courseTitle} priceDisplay={priceDisplay} onClose={() => setShow(false)} />}
     </>
   );

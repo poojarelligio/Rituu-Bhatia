@@ -5,21 +5,63 @@
    ============================================================ */
 
 @theme {
-  --color-ivory:        #FEFEFE;
---color-ivory-deep:   #F8F6F2;
---color-charcoal:     #3B3060;
---color-charcoal-soft:#4F437A;
---color-burgundy:     #DAAA61;
---color-burgundy-deep:#C4923F;
---color-gold:         #DAAA61;
---color-gold-soft:    #E8C88A;
---color-line:         #E5DDD0;
-
-  --font-display: "Fraunces", "Iowan Old Style", serif;
-  --font-body: "Work Sans", "Helvetica Neue", sans-serif;
-  --font-label: "Space Mono", ui-monospace, monospace;
+  /* Base (light sections) */
+  --color-ivory:         #FEFDFB;
+  --color-ivory-deep:    #FAF4E6;   /* warm golden-cream tint for alternate sections */
+  --color-charcoal:      #1F1752;   /* text + deep indigo */
+  --color-charcoal-soft: #4A3F86;
+  --color-line:          #EBDDB8;   /* soft golden line */
+ 
+  /* GOLDEN family – brighter and richer */
+  --color-gold:          #EDB24E;
+  --color-gold-soft:     #F7D58F;
+  --color-gold-deep:     #BE8420;   /* golden text on white */
+ 
+  /* Old "burgundy" name → golden, so existing buttons, links and hovers turn golden */
+  --color-burgundy:      #DDA13F;
+  --color-burgundy-deep: #BE8420;
+ 
+  /* Dark tones – from the image */
+  --color-ink:           #0E0C3B;
+  --color-ink-mid:       #1B1550;
+  --color-violet:        #6A45B8;
+ 
+  /* Services */
+  --color-vaastu:         #F08A4B;
+  --color-vaastu-deep:    #5C2410;
+  --color-tarot:          #B98CF0;
+  --color-tarot-deep:     #2E1250;
+  --color-astrology:      #8FA2FF;
+  --color-astrology-deep: #121B4D;
+  --color-reiki:          #6FD3BF;
+  --color-reiki-deep:     #0F3B36;
+ 
+  /* Fonts */
+  --font-display: "Syne", "Montserrat", sans-serif;
+  --font-body: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  --font-label: "Fira Code", monospace;
 }
-
+ 
+@theme static {
+  /* bright colour (glows, icons, buttons)   /   deeper shade (small text on light backgrounds) */
+  --color-vaastu:            #F08A4B;   /* saffron orange */
+  --color-vaastu-deep:       #9A4A1B;
+ 
+  --color-tarot:             #B98CF0;   /* violet */
+  --color-tarot-deep:        #5B2E9E;
+ 
+  --color-astrology:         #8FA2FF;   /* periwinkle blue */
+  --color-astrology-deep:    #2F3FA8;
+ 
+  --color-reiki:             #6FD3BF;   /* mint */
+  --color-reiki-deep:        #17806E;
+ 
+  --color-signature:         #F27FA5;   /* rose */
+  --color-signature-deep:    #A8365F;
+ 
+  --color-logo:              #57C7E8;   /* sky cyan */
+  --color-logo-deep:         #17789A;
+}
 html {
   scroll-behavior: smooth;
 }
@@ -597,3 +639,86 @@ body {
 }
 
 
+/* ============================================================
+   MOTION SYSTEM — paste at the END of globals.css
+   Same rules your homepage injects with its inline <style>. Moving them
+   here makes every page (About, Services, Contact…) share them. After
+   pasting you can delete the `homeCss` constant and the
+   <style dangerouslySetInnerHTML …/> line from the homepage.
+   Scroll reveals use CSS scroll-driven animations (Chrome/Edge/Safari);
+   other browsers just show the content. Disabled for reduced motion.
+   ============================================================ */
+
+@keyframes v-fade-up    { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: none; } }
+@keyframes v-fade-left  { from { opacity: 0; transform: translateX(-48px); } to { opacity: 1; transform: none; } }
+@keyframes v-fade-right { from { opacity: 0; transform: translateX(48px); } to { opacity: 1; transform: none; } }
+@keyframes v-pop        { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+@keyframes v-blur-in    { from { opacity: 0; filter: blur(14px); transform: translateY(22px); } to { opacity: 1; filter: none; transform: none; } }
+@keyframes v-draw       { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes v-drift      { from { transform: translate3d(0, -70px, 0); } to { transform: translate3d(0, 70px, 0); } }
+@keyframes v-float      { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+@keyframes v-shimmer    { to { background-position: 200% center; } }
+@keyframes v-marquee    { to { transform: translateX(-50%); } }
+@keyframes v-twinkle    { 0%, 100% { opacity: .25; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.15); } }
+@keyframes v-ring       { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-gold) 55%, transparent); } 100% { box-shadow: 0 0 0 18px transparent; } }
+
+.v-float   { animation: v-float 8s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.v-twinkle { animation: v-twinkle 3.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.v-ring    { animation: v-ring 2.4s ease-out infinite; }
+.v-marquee { display: flex; width: max-content; animation: v-marquee 45s linear infinite; }
+.v-marquee-wrap:hover .v-marquee { animation-play-state: paused; }
+
+.v-grad-text {
+  background-image: linear-gradient(90deg, var(--color-charcoal), var(--color-violet), var(--color-gold-deep), var(--color-violet), var(--color-charcoal));
+  background-size: 200% auto;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: v-shimmer 9s linear infinite;
+}
+.v-grad-gold {
+  background-image: linear-gradient(90deg, var(--color-gold-soft), var(--color-gold), var(--color-gold-deep), var(--color-gold), var(--color-gold-soft));
+  background-size: 200% auto;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: v-shimmer 7s linear infinite;
+}
+
+@supports (animation-timeline: view()) {
+  .v-reveal, .v-left, .v-right, .v-pop, .v-blur {
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: view();
+    animation-range: entry calc(var(--i, 0) * 7%) entry calc(36% + var(--i, 0) * 7%);
+  }
+  .v-reveal { animation-name: v-fade-up; }
+  .v-left   { animation-name: v-fade-left; }
+  .v-right  { animation-name: v-fade-right; }
+  .v-pop    { animation-name: v-pop; }
+  .v-blur   { animation-name: v-blur-in; }
+  .v-draw {
+    transform-origin: left;
+    animation: v-draw linear both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 40%;
+  }
+  .v-drift {
+    animation: v-drift linear both;
+    animation-timeline: view();
+    animation-range: cover;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v-reveal, .v-left, .v-right, .v-pop, .v-blur, .v-draw, .v-drift,
+  .v-float, .v-twinkle, .v-ring, .v-marquee, .v-grad-text, .v-grad-gold {
+    animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important;
+  }
+  .v-grad-text, .v-grad-gold { background-position: 0 center; }
+}
+.leading-relaxed{
+font-size: 16px;
+}
+input::placeholder {
+    color: #726e6e;
+}
+input{
+    color: #726e6e;
+}

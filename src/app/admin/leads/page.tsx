@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Mail, MessageCircle, Search, Eye, X } from "lucide-react";
+import Pagination from "@/components/admin/Pagination";
 
 interface LeadRow {
   id: number;
@@ -31,11 +32,23 @@ const SOURCE_LABELS: Record<string, string> = {
   resource_download: "Resource Download",
   energy_assessment: "Energy Assessment",
   newsletter: "Newsletter",
+  workshop_notify: "Workshop Notify",
 };
 
-type Tab = "all" | "new" | "in_progress" | "won" | "lost";
+type SourceTab = "all" | "contact_form" | "resource_download" | "energy_assessment" | "newsletter" | "workshop_notify";
 
-const TAB_STATUSES: Record<Tab, string[] | null> = {
+const SOURCE_TABS: { key: SourceTab; label: string; source: string | null }[] = [
+  { key: "all", label: "All Sources", source: null },
+  { key: "contact_form", label: "Contact Form", source: "contact_form" },
+  { key: "resource_download", label: "Resource Downloads", source: "resource_download" },
+  { key: "energy_assessment", label: "Energy Assessments", source: "energy_assessment" },
+  { key: "workshop_notify", label: "Workshop Notify", source: "workshop_notify" },
+  { key: "newsletter", label: "Newsletter", source: "newsletter" },
+];
+
+type StatusTab = "all" | "new" | "in_progress" | "won" | "lost";
+
+const STATUS_TABS: Record<StatusTab, string[] | null> = {
   all: null,
   new: ["NEW"],
   in_progress: ["CONTACTED", "INTERESTED", "BOOKED"],
@@ -50,10 +63,15 @@ function whatsappDigitsOnly(phone: string) {
 export default function LeadsAdminPage() {
   const [rows, setRows] = useState<LeadRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<Tab>("all");
+  const [statusTab, setStatusTab] = useState<StatusTab>("all");
+  const [sourceTab, setSourceTab] = useState<SourceTab>("all");
   const [search, setSearch] = useState("");
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // ---------- Pagination state ----------
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -78,22 +96,46 @@ export default function LeadsAdminPage() {
     });
   }
 
-  const counts = useMemo(() => {
-    const c: Record<Tab, number> = { all: rows.length, new: 0, in_progress: 0, won: 0, lost: 0 };
+  // Counts by status
+  const statusCounts = useMemo(() => {
+    const c: Record<StatusTab, number> = { all: rows.length, new: 0, in_progress: 0, won: 0, lost: 0 };
     for (const row of rows) {
-      if (TAB_STATUSES.new!.includes(row.status)) c.new++;
-      else if (TAB_STATUSES.in_progress!.includes(row.status)) c.in_progress++;
-      else if (TAB_STATUSES.won!.includes(row.status)) c.won++;
-      else if (TAB_STATUSES.lost!.includes(row.status)) c.lost++;
+      if (STATUS_TABS.new!.includes(row.status)) c.new++;
+      else if (STATUS_TABS.in_progress!.includes(row.status)) c.in_progress++;
+      else if (STATUS_TABS.won!.includes(row.status)) c.won++;
+      else if (STATUS_TABS.lost!.includes(row.status)) c.lost++;
     }
     return c;
   }, [rows]);
 
+  // Counts by source
+  const sourceCounts = useMemo(() => {
+    const c: Record<SourceTab, number> = { all: rows.length, contact_form: 0, resource_download: 0, energy_assessment: 0, newsletter: 0, workshop_notify: 0 };
+    for (const row of rows) {
+      const source = row.source || "";
+      if (source === "contact_form") c.contact_form++;
+      else if (source === "resource_download") c.resource_download++;
+      else if (source === "energy_assessment") c.energy_assessment++;
+      else if (source === "newsletter") c.newsletter++;
+      else if (source === "workshop_notify") c.workshop_notify++;
+    }
+    return c;
+  }, [rows]);
+
+  // Filtered data
   const filtered = useMemo(() => {
     let result = rows;
-    const statuses = TAB_STATUSES[tab];
+
+    // Filter by status
+    const statuses = STATUS_TABS[statusTab];
     if (statuses) result = result.filter((r) => statuses.includes(r.status));
 
+    // Filter by source
+    if (sourceTab !== "all") {
+      result = result.filter((r) => r.source === sourceTab);
+    }
+
+    // Filter by search
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       result = result.filter(
@@ -101,14 +143,28 @@ export default function LeadsAdminPage() {
       );
     }
     return result;
-  }, [rows, tab, search]);
+  }, [rows, statusTab, sourceTab, search]);
 
-  const TABS: { key: Tab; label: string }[] = [
-    { key: "all", label: `All (${counts.all})` },
-    { key: "new", label: `New (${counts.new})` },
-    { key: "in_progress", label: `In Progress (${counts.in_progress})` },
-    { key: "won", label: `Won (${counts.won})` },
-    { key: "lost", label: `Lost (${counts.lost})` },
+  // ---------- Pagination slicing ----------
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setPage(1);
+  }, [statusTab, sourceTab, search]);
+
+  // Snap to last valid page if current page becomes empty
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  const STATUS_TABS_UI: { key: StatusTab; label: string }[] = [
+    { key: "all", label: `All (${statusCounts.all})` },
+    { key: "new", label: `New (${statusCounts.new})` },
+    { key: "in_progress", label: `In Progress (${statusCounts.in_progress})` },
+    { key: "won", label: `Won (${statusCounts.won})` },
+    { key: "lost", label: `Lost (${statusCounts.lost})` },
   ];
 
   function openModal(lead: LeadRow) {
@@ -125,24 +181,44 @@ export default function LeadsAdminPage() {
     <div className="max-w-full">
       <h1 className="font-display text-2xl text-charcoal mb-8">Leads</h1>
 
-      {/* Tabs + search */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div className="flex flex-wrap gap-2">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`px-4 py-2 text-sm rounded-full border transition-colors ${
-                tab === t.key
-                  ? "bg-burgundy text-ivory border-burgundy"
-                  : "bg-white text-charcoal/60 border-line hover:border-burgundy/40"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+      {/* ========== SOURCE TABS ========== */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <span className="text-xs text-charcoal/40 font-label tracking-wider uppercase mr-2 self-center">Source:</span>
+        {SOURCE_TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setSourceTab(t.key)}
+            className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+              sourceTab === t.key
+                ? "bg-burgundy/10 text-burgundy border-burgundy/30"
+                : "bg-white text-charcoal/50 border-line hover:border-burgundy/30"
+            }`}
+          >
+            {t.label} ({sourceCounts[t.key]})
+          </button>
+        ))}
+      </div>
 
+      {/* ========== STATUS TABS ========== */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        <span className="text-xs text-charcoal/40 font-label tracking-wider uppercase mr-2 self-center">Status:</span>
+        {STATUS_TABS_UI.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setStatusTab(t.key)}
+            className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+              statusTab === t.key
+                ? "bg-burgundy text-ivory border-burgundy"
+                : "bg-white text-charcoal/50 border-line hover:border-burgundy/30"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ========== SEARCH BAR ========== */}
+      <div className="flex justify-end mb-6">
         <div className="relative w-full sm:w-64">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal/30" />
           <input
@@ -155,11 +231,12 @@ export default function LeadsAdminPage() {
         </div>
       </div>
 
+      {/* ========== TABLE ========== */}
       {loading ? (
         <p className="text-charcoal/50 text-sm">Loading…</p>
       ) : filtered.length === 0 ? (
         <p className="text-charcoal/50 text-sm">
-          {rows.length === 0 ? "No leads yet." : "No leads match your search."}
+          {rows.length === 0 ? "No leads yet." : "No leads match your filters."}
         </p>
       ) : (
         <div className="bg-white border border-line rounded-sm overflow-hidden">
@@ -174,7 +251,7 @@ export default function LeadsAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((row) => (
+              {paginated.map((row) => (
                 <tr key={row.id} className="border-t border-line hover:bg-ivory-deep/30">
                   <td className="px-4 py-3">
                     <p className="font-medium text-charcoal">{row.name}</p>
@@ -208,103 +285,114 @@ export default function LeadsAdminPage() {
               ))}
             </tbody>
           </table>
+          {/* ========== PAGINATION ========== */}
+          <div className="px-4 py-3 border-t border-line">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          </div>
         </div>
       )}
 
-      {/* Modal */}
-  {isModalOpen && selectedLead && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/50 backdrop-blur-sm px-4">
-      <div
-        className="relative bg-ivory rounded-sm w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl border border-line"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={closeModal}
-          className="absolute top-4 right-4 text-charcoal/40 hover:text-charcoal transition-colors"
-        >
-          <X size={20} />
-        </button>
-
-        <div className="p-8">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h2 className="font-display text-2xl text-charcoal">{selectedLead.name}</h2>
-              <p className="text-sm text-charcoal/50">{selectedLead.email}</p>
-              {selectedLead.phone && (
-                <p className="text-sm text-charcoal/50">{selectedLead.phone}</p>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedLead.status}
-                onChange={(e) => updateStatus(selectedLead.id, e.target.value)}
-                className={`border rounded-full px-3 py-1 text-xs font-medium focus:outline-none ${STATUS_STYLES[selectedLead.status] || "border-line text-charcoal/60"}`}
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="space-y-4 text-sm">
-            <div>
-              <p className="text-xs text-charcoal/40 uppercase tracking-wide mb-1">Interested In</p>
-              <p className="text-charcoal">{selectedLead.service_title || "—"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-charcoal/40 uppercase tracking-wide mb-1">Message</p>
-              <p className="text-charcoal/70 whitespace-pre-wrap">{selectedLead.message || "No message"}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-charcoal/40 uppercase tracking-wide mb-1">Source</p>
-                <p className="text-charcoal">{SOURCE_LABELS[selectedLead.source || ""] || selectedLead.source || "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-charcoal/40 uppercase tracking-wide mb-1">Received</p>
-                <p className="text-charcoal">{new Date(selectedLead.created_at).toLocaleDateString()}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="mt-8 pt-6 border-t border-line flex flex-wrap gap-3">
-            <a
-              href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(selectedLead.email)}&su=${encodeURIComponent(
-                `Re: Your enquiry${selectedLead.service_title ? ` about ${selectedLead.service_title}` : ""}`
-              )}&body=${encodeURIComponent(`Hi ${selectedLead.name},\n\n`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-line text-sm text-charcoal/60 hover:text-burgundy hover:border-burgundy transition-colors"
-            >
-              <Mail size={16} />
-              Email (Gmail)
-            </a>
-            {selectedLead.phone && (
-              <a
-                href={`https://wa.me/${whatsappDigitsOnly(selectedLead.phone)}?text=${encodeURIComponent(
-                  `Hi ${selectedLead.name}, this is Rituu Bhatia — `
-                )}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-line text-sm text-charcoal/60 hover:text-burgundy hover:border-burgundy transition-colors"
-              >
-                <MessageCircle size={16} />
-                WhatsApp
-              </a>
-            )}
+      {/* ========== MODAL ========== */}
+      {isModalOpen && selectedLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/50 backdrop-blur-sm px-4">
+          <div
+            className="relative bg-ivory rounded-sm w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl border border-line"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={closeModal}
-              className="ml-auto px-4 py-2 text-sm text-charcoal/40 hover:text-charcoal transition-colors"
+              className="absolute top-4 right-4 text-charcoal/40 hover:text-charcoal transition-colors"
             >
-              Close
+              <X size={20} />
             </button>
+
+            <div className="p-8">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h2 className="font-display text-2xl text-charcoal">{selectedLead.name}</h2>
+                  <p className="text-sm text-charcoal/50">{selectedLead.email}</p>
+                  {selectedLead.phone && (
+                    <p className="text-sm text-charcoal/50">{selectedLead.phone}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-charcoal/30 font-label tracking-wider px-2 py-1 border border-line rounded-full">
+                    {SOURCE_LABELS[selectedLead.source || ""] || selectedLead.source || "Unknown"}
+                  </span>
+                  <select
+                    value={selectedLead.status}
+                    onChange={(e) => updateStatus(selectedLead.id, e.target.value)}
+                    className={`border rounded-full px-3 py-1 text-xs font-medium focus:outline-none ${STATUS_STYLES[selectedLead.status] || "border-line text-charcoal/60"}`}
+                  >
+                    {STATUSES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-4 text-sm">
+                <div>
+                  <p className="text-xs text-charcoal/40 uppercase tracking-wide mb-1">Interested In</p>
+                  <p className="text-charcoal">{selectedLead.service_title || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-charcoal/40 uppercase tracking-wide mb-1">Message</p>
+                  <p className="text-charcoal/70 whitespace-pre-wrap">{selectedLead.message || "No message"}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-charcoal/40 uppercase tracking-wide mb-1">Source</p>
+                    <p className="text-charcoal">{SOURCE_LABELS[selectedLead.source || ""] || selectedLead.source || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-charcoal/40 uppercase tracking-wide mb-1">Received</p>
+                    <p className="text-charcoal">{new Date(selectedLead.created_at).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-8 pt-6 border-t border-line flex flex-wrap gap-3">
+                <a
+                  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(selectedLead.email)}&su=${encodeURIComponent(
+                    `Re: Your enquiry${selectedLead.service_title ? ` about ${selectedLead.service_title}` : ""}`
+                  )}&body=${encodeURIComponent(`Hi ${selectedLead.name},\n\n`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-line text-sm text-charcoal/60 hover:text-burgundy hover:border-burgundy transition-colors"
+                >
+                  <Mail size={16} />
+                  Email (Gmail)
+                </a>
+                {selectedLead.phone && (
+                  <a
+                    href={`https://wa.me/${whatsappDigitsOnly(selectedLead.phone)}?text=${encodeURIComponent(
+                      `Hi ${selectedLead.name}, this is Rituu Bhatia — `
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-line text-sm text-charcoal/60 hover:text-burgundy hover:border-burgundy transition-colors"
+                  >
+                    <MessageCircle size={16} />
+                    WhatsApp
+                  </a>
+                )}
+                <button
+                  onClick={closeModal}
+                  className="ml-auto px-4 py-2 text-sm text-charcoal/40 hover:text-charcoal transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  )}
+      )}
     </div>
   );
 }

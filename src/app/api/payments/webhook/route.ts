@@ -6,7 +6,15 @@ import { createPasswordSetupToken } from "@/lib/studentPassword";
 import {
   sendCourseEnrollmentEmail,
   sendPasswordSetupEmail,
+  sendEmail,
+  getAdminNotificationEmail,
 } from "@/lib/email";
+import {
+  customerBookingConfirmationEmail,
+  adminBookingNotificationEmail,
+} from "@/lib/emailTemplates";
+import { syncBookingToGoogleCalendar } from "@/lib/syncBookingToCalendar";
+import { getStaticServiceBySlug, getStaticServiceDurationMinutes } from "@/lib/staticServices";
 
 interface RazorpayWebhookPayload {
   event: string;
@@ -24,9 +32,13 @@ interface BookingRow extends RowDataPacket {
   id: number;
   item_type: "service" | "free_intro" | "course";
   item_id: number;
+  service_slug: string | null;
+  booking_date: string | null;
+  booking_time: string | null;
   customer_name: string;
   customer_email: string;
   customer_phone: string;
+  notes: string | null;
   status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "REFUNDED";
   course_title: string | null;
 }
@@ -62,6 +74,7 @@ async function handlePaymentCaptured(payload: RazorpayWebhookPayload) {
   const { order_id: orderId, id: paymentId } = payload.payload.payment.entity;
   const connection = await pool.getConnection();
 
+  // --- Course email job (only set for course bookings) ---
   let emailJob:
     | {
         type: "setup-password";
@@ -77,6 +90,9 @@ async function handlePaymentCaptured(payload: RazorpayWebhookPayload) {
       }
     | null = null;
 
+  // --- Snapshot of the confirmed booking (for service emails / calendar sync) ---
+  let bookingSnapshot: BookingRow | null = null;
+
   try {
     await connection.beginTransaction();
 
@@ -85,9 +101,13 @@ async function handlePaymentCaptured(payload: RazorpayWebhookPayload) {
          b.id,
          b.item_type,
          b.item_id,
+         b.service_slug,
+         b.booking_date,
+         b.booking_time,
          b.customer_name,
          b.customer_email,
          b.customer_phone,
+         b.notes,
          b.status,
          c.title AS course_title
        FROM bookings b
@@ -100,18 +120,19 @@ async function handlePaymentCaptured(payload: RazorpayWebhookPayload) {
 
     const booking = bookingRows[0];
 
-    // Unknown orders are acknowledged so Razorpay does not keep retrying them.
+    // Unknown order — acknowledge so Razorpay stops retrying.
     if (!booking) {
       await connection.commit();
       return;
     }
 
-    // Razorpay can deliver the same event more than once.
+    // Idempotency — Razorpay may deliver the same event more than once.
     if (booking.status === "CONFIRMED") {
       await connection.commit();
       return;
     }
 
+    // Mark booking as paid.
     await connection.query(
       `UPDATE bookings
        SET status = 'CONFIRMED', razorpay_payment_id = ?
@@ -119,6 +140,7 @@ async function handlePaymentCaptured(payload: RazorpayWebhookPayload) {
       [paymentId, booking.id]
     );
 
+    // ---- COURSE FLOW: create student + enrollment ----
     if (booking.item_type === "course") {
       const email = booking.customer_email.trim().toLowerCase();
 
@@ -173,10 +195,6 @@ async function handlePaymentCaptured(payload: RazorpayWebhookPayload) {
           courseTitle,
         };
       } else {
-        /*
-         * The token is stored hashed in MySQL. Only this one raw value is
-         * sent to the student's email.
-         */
         emailJob = {
           type: "setup-password",
           studentId: student.id,
@@ -186,6 +204,9 @@ async function handlePaymentCaptured(payload: RazorpayWebhookPayload) {
       }
     }
 
+    // Keep a snapshot for post-commit side effects.
+    bookingSnapshot = booking;
+
     await connection.commit();
   } catch (error) {
     await connection.rollback().catch(() => undefined);
@@ -194,15 +215,15 @@ async function handlePaymentCaptured(payload: RazorpayWebhookPayload) {
     connection.release();
   }
 
-  /*
-   * Payment and access are already committed above. An SMTP error must not
-   * make Razorpay retry an otherwise successful payment webhook.
-   */
+  // ============================================================
+  //  SIDE EFFECTS — run AFTER the transaction is committed
+  // ============================================================
+
+  // ---- Course emails ----
   if (emailJob) {
     try {
       if (emailJob.type === "setup-password") {
         const token = await createPasswordSetupToken(emailJob.studentId);
-
         await sendPasswordSetupEmail({
           name: emailJob.name,
           email: emailJob.email,
@@ -213,6 +234,69 @@ async function handlePaymentCaptured(payload: RazorpayWebhookPayload) {
       }
     } catch (error) {
       console.error("Course enrollment email could not be sent:", error);
+    }
+  }
+
+  // ---- Service booking emails + calendar sync ----
+  if (bookingSnapshot && bookingSnapshot.item_type === "service") {
+    const service = bookingSnapshot.service_slug
+      ? getStaticServiceBySlug(bookingSnapshot.service_slug)
+      : null;
+    const serviceName = service?.title || "Consultation";
+
+    const emailData = {
+      serviceOrCourseName: serviceName,
+      date: bookingSnapshot.booking_date || undefined,
+      time: bookingSnapshot.booking_time || undefined,
+      customerName: bookingSnapshot.customer_name,
+      customerEmail: bookingSnapshot.customer_email,
+      customerPhone: bookingSnapshot.customer_phone,
+      notes: bookingSnapshot.notes || undefined,
+    };
+
+    // Customer confirmation
+    try {
+      await sendEmail({
+        to: bookingSnapshot.customer_email,
+        ...customerBookingConfirmationEmail(emailData),
+      });
+    } catch (err) {
+      console.error("Customer confirmation email failed:", err);
+    }
+
+    // Admin notification
+    try {
+      const adminEmail = getAdminNotificationEmail();
+      if (adminEmail) {
+        await sendEmail({
+          to: adminEmail,
+          replyTo: bookingSnapshot.customer_email,
+          ...adminBookingNotificationEmail(emailData),
+        });
+      }
+    } catch (err) {
+      console.error("Admin notification email failed:", err);
+    }
+
+    // Calendar sync
+    if (
+      bookingSnapshot.booking_date &&
+      bookingSnapshot.booking_time &&
+      bookingSnapshot.service_slug
+    ) {
+      try {
+        await syncBookingToGoogleCalendar({
+          itemType: "service",
+          serviceSlug: bookingSnapshot.service_slug,
+          date: bookingSnapshot.booking_date,
+          time: bookingSnapshot.booking_time,
+          durationMinutes: getStaticServiceDurationMinutes(bookingSnapshot.service_slug),
+          customerName: bookingSnapshot.customer_name,
+          customerEmail: bookingSnapshot.customer_email,
+        });
+      } catch (err) {
+        console.error("Calendar sync failed:", err);
+      }
     }
   }
 }

@@ -52,7 +52,7 @@ export default function Header() {
         </nav>
 
         <div className="hidden lg:block">
-          <Button href="/book" variant="primary">Book a Consultation</Button>
+          <Button href="/appointment" variant="primary">Book an Appointment</Button>
         </div>
 
         <button className="lg:hidden p-2 text-charcoal" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen((v) => !v)}>
@@ -68,7 +68,7 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
-            <Button href="/book" variant="primary" className="mt-2 w-full">Book a Consultation</Button>
+            <Button href="/appointment" variant="primary" className="mt-2 w-full">Book an Appointment</Button>
           </nav>
         </div>
       )}

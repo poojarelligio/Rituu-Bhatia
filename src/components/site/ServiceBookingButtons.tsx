@@ -12,8 +12,8 @@ export default function ServiceBookingButtons({
   return (
     <>
       <div className={layout === "hero" ? "flex flex-wrap gap-4" : "flex flex-wrap justify-center gap-4"}>
-        <Button href={`/book?service=${serviceSlug}`} variant={layout === "hero" ? "primary" : "onDark"}>
-          Book a Consultation
+        <Button href={`/appointment?service=${serviceSlug}`} variant={layout === "hero" ? "primary" : "onDark"}>
+          Book an Appointment
         </Button>
         <Button
           variant="secondary"

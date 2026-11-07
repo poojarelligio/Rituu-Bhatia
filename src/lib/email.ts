@@ -124,3 +124,40 @@ Rituu Bhatia`,
     `,
   });
 }
+
+// ---------------------------------------------------------------------
+// Generic email + admin-notification support, used by booking/lead
+// notifications (src/lib/emailTemplates.ts). Reuses the same transporter
+// and SMTP_* env vars as everything above — no separate config needed.
+// ---------------------------------------------------------------------
+
+interface SendEmailInput {
+  to: string;
+  subject: string;
+  html: string;
+  replyTo?: string;
+}
+
+/**
+ * Sends an arbitrary email via the same SMTP transporter used above. Fails
+ * silently — logs the error and returns false rather than throwing —
+ * because these notifications are layered on top of a booking or lead; a
+ * flaky SMTP connection should never cause the underlying action to fail.
+ */
+export async function sendEmail({ to, subject, html, replyTo }: SendEmailInput): Promise<boolean> {
+  try {
+    const from = process.env.SMTP_FROM;
+    if (!from) {
+      throw new Error("SMTP_FROM is missing in .env.local.");
+    }
+    await getTransporter().sendMail({ from, to, subject, html, replyTo });
+    return true;
+  } catch (err) {
+    console.error("Email send failed:", err);
+    return false;
+  }
+}
+
+export function getAdminNotificationEmail(): string | null {
+  return process.env.ADMIN_NOTIFICATION_EMAIL || null;
+}

@@ -208,8 +208,8 @@ export default function AssessmentPage() {
             <p className="text-charcoal/65 leading-relaxed mb-8">
               {result.description}
             </p>
-            <Button href="/book" variant="primary">
-              Book a Consultation
+            <Button href="/appointment" variant="primary">
+              Book an Appointment
             </Button>
           </div>
         )}

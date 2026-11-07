@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Mail, MessageCircle, Search } from "lucide-react";
+import Pagination from "@/components/admin/Pagination";
 
 interface BookingRow {
   id: number;
@@ -83,6 +84,18 @@ export default function BookingsAdminPage() {
     return result;
   }, [rows, tab, search]);
 
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Reset to page 1 whenever the tab or search changes the result set,
+  // so switching tabs never leaves you stranded on an empty page 4.
+  useEffect(() => {
+    setPage(1);
+  }, [tab, search]);
+
   const TABS: { key: Tab; label: string }[] = [
     { key: "all", label: `All (${counts.all})` },
     { key: "services", label: `Services (${counts.services})` },
@@ -144,7 +157,7 @@ export default function BookingsAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((row) => {
+              {paginated.map((row) => {
                 const mailtoHref = `mailto:${row.customer_email}?subject=${encodeURIComponent(
                   `Re: Your ${row.item_title || "booking"}`
                 )}&body=${encodeURIComponent(`Hi ${row.customer_name},\n\n`)}`;
@@ -204,6 +217,7 @@ export default function BookingsAdminPage() {
               })}
             </tbody>
           </table>
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
     </div>

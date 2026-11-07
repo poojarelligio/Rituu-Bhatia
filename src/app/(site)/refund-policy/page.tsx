@@ -19,7 +19,7 @@ export default function RefundPolicyPage() {
 
           {/* Introduction */}
           <p className="text-charcoal/60 italic border-l-2 border-gold/30 pl-4">
-            At Rituu Bhatia Tarot Consultations, we are committed to offering you a meaningful and respectful experience. Please take a moment to review our refund and cancellation policy before booking your session.
+            At Rituu Bhatia Tarot Card Consultations, we are committed to offering you a meaningful and respectful experience. Please take a moment to review our refund and cancellation policy before booking your session.
           </p>
 
           {/* Section 1 */}

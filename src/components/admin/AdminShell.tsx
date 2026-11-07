@@ -20,6 +20,8 @@ const NAV_SECTIONS = [
       { href: "/admin/resources", label: "Free Resources" },
       { href: "/admin/media-features", label: "Media & Recognition" },
       { href: "/admin/blog", label: "Blog" },
+      { href: "/admin/appointments", label: "Appointments" },
+
     ],
   },
   {

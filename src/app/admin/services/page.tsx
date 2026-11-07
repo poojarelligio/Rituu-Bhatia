@@ -14,12 +14,12 @@ export default function ServicesAdminPage() {
       ]}
       fields={[
         { name: "title", label: "Title", type: "text" },
-        { name: "slug", label: "Slug", type: "text", help: "e.g. tarot-reading" },
+        { name: "slug", label: "Slug", type: "text", help: "e.g. tarot card-reading" },
         { name: "code", label: "Code", type: "text", help: "e.g. TR — used on the ledger index tab" },
         { name: "short_description", label: "Short Description", type: "textarea" },
         { name: "full_description", label: "Full Description", type: "textarea" },
         { name: "image_url", label: "Image", type: "image" },
-        { name: "duration", label: "Duration", type: "text", help: 'e.g. "45 minutes"' },
+        { name: "duration", label: "Duration", type: "text", help: 'e.g. "30 minutes"' },
         { name: "price_display", label: "Price (display)", type: "text", help: "e.g. ₹1,500" },
         { name: "price_amount", label: "Price (paise, for Razorpay)", type: "number", help: "150000 = ₹1,500.00" },
         { name: "booking_cta_label", label: "Booking CTA Label", type: "text" },

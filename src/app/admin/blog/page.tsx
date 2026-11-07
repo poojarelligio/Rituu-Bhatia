@@ -20,7 +20,7 @@ export default function BlogAdminPage() {
         { name: "featured_image_url", label: "Featured Image", type: "image" },
         { name: "category", label: "Category", type: "select", options: [
           { value: "Astrology", label: "Astrology" }, { value: "Vaastu", label: "Vaastu" },
-          { value: "Reiki", label: "Reiki" }, { value: "Tarot", label: "Tarot" },
+          { value: "Reiki", label: "Reiki" }, { value: "Tarot Card", label: "Tarot Card" },
           { value: "Spiritual Growth", label: "Spiritual Growth" }, { value: "Numerology", label: "Numerology" },
           { value: "Life Coaching", label: "Life Coaching" },
         ] },

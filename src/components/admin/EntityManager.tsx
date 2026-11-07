@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Pagination from "@/components/admin/Pagination";
 
 export type FieldType =
   | "text" | "textarea" | "number" | "checkbox" | "date" | "select"
@@ -15,21 +16,80 @@ export interface FieldSchema {
 }
 
 interface EntityManagerProps {
-  apiBase: string; // e.g. "/api/admin/services"
+  apiBase: string;
   title: string;
   fields: FieldSchema[];
   listColumns: { key: string; label: string }[];
-  titleField?: string; // field used as the row heading in the list, default 'title'
+  titleField?: string;
 }
 
 type Row = Record<string, unknown>;
 
-export default function EntityManager({ apiBase, title, fields, listColumns, }: EntityManagerProps) {
+// ---------------------------------------------------------------------
+// Helpers: DB columns often come back as JSON *strings*, not arrays.
+// ---------------------------------------------------------------------
+
+function toArray(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed;
+      // handle double-encoded JSON
+      if (typeof parsed === "string") {
+        const again = JSON.parse(parsed);
+        if (Array.isArray(again)) return again;
+      }
+    } catch {
+      /* not JSON */
+    }
+  }
+  return [];
+}
+
+type Module = { module: string; lessons: string[] };
+
+function normalizeCurriculum(value: unknown): Module[] {
+  return toArray(value).map((item) => {
+    if (typeof item === "string") return { module: item, lessons: [] };
+    const m = (item || {}) as Record<string, unknown>;
+    const name = (m.module ?? m.title ?? m.name ?? "") as string;
+    const rawLessons = toArray(m.lessons);
+    const lessons = rawLessons.map((l) =>
+      typeof l === "string" ? l : String((l as Record<string, unknown>)?.title ?? (l as Record<string, unknown>)?.name ?? "")
+    );
+    return { module: String(name), lessons };
+  });
+}
+
+const LIST_TYPES: FieldType[] = ["string-list", "stat-list", "process-list", "curriculum"];
+
+function normalizeInitial(initial: Row, fields: FieldSchema[]): Row {
+  const out: Row = { ...initial };
+  for (const f of fields) {
+    if (!LIST_TYPES.includes(f.type)) continue;
+    out[f.name] = f.type === "curriculum" ? normalizeCurriculum(initial[f.name]) : toArray(initial[f.name]);
+  }
+  return out;
+}
+
+export default function EntityManager({ apiBase, title, fields, listColumns }: EntityManagerProps) {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState<Row | null>(null); // null = list view, {} = new, {...} = editing
+  const [editing, setEditing] = useState<Row | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  // ---------- Pagination ----------
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const paginatedRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -112,7 +172,7 @@ export default function EntityManager({ apiBase, title, fields, listColumns, }: 
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {paginatedRows.map((row) => (
                 <tr key={String(row.id)} className="border-t border-line hover:bg-ivory-deep/40">
                   {listColumns.map((col) => (
                     <td key={col.key} className="px-4 py-3 text-charcoal/80 max-w-xs truncate">
@@ -131,6 +191,7 @@ export default function EntityManager({ apiBase, title, fields, listColumns, }: 
               ))}
             </tbody>
           </table>
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
     </div>
@@ -139,9 +200,7 @@ export default function EntityManager({ apiBase, title, fields, listColumns, }: 
 
 function formatCell(value: unknown) {
   if (value === null || value === undefined) return "—";
-  if (typeof value === "boolean" || value === 0 || value === 1) {
-    if (typeof value === "number") return value === 1 ? "Yes" : "No";
-  }
+  if (typeof value === "number" && (value === 0 || value === 1)) return value === 1 ? "Yes" : "No";
   if (typeof value === "object") return JSON.stringify(value).slice(0, 60);
   return String(value);
 }
@@ -161,7 +220,8 @@ function EntityForm({
   onCancel: () => void;
   onSave: (data: Row) => void;
 }) {
-  const [values, setValues] = useState<Row>(initial);
+  // Parse JSON-string columns into real arrays once, when the form opens
+  const [values, setValues] = useState<Row>(() => normalizeInitial(initial, fields));
 
   function setField(name: string, value: unknown) {
     setValues((v) => ({ ...v, [name]: value }));
@@ -196,6 +256,8 @@ function EntityForm({
   );
 }
 
+const inputCls = "w-full border border-line rounded-sm px-3 py-2 focus-visible:outline-burgundy";
+
 function FieldInput({ field, value, onChange }: { field: FieldSchema; value: unknown; onChange: (v: unknown) => void }) {
   const label = (
     <label className="text-xs text-charcoal/60 uppercase tracking-wide block mb-1">
@@ -209,58 +271,34 @@ function FieldInput({ field, value, onChange }: { field: FieldSchema; value: unk
       return (
         <div>
           {label}
-          <input
-            type="text"
-            value={(value as string) ?? ""}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full border border-line rounded-sm px-3 py-2 focus-visible:outline-burgundy"
-          />
+          <input type="text" value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} className={inputCls} />
         </div>
       );
     case "number":
       return (
         <div>
           {label}
-          <input
-            type="number"
-            value={(value as number) ?? ""}
-            onChange={(e) => onChange(Number(e.target.value))}
-            className="w-full border border-line rounded-sm px-3 py-2 focus-visible:outline-burgundy"
-          />
+          <input type="number" value={(value as number) ?? ""} onChange={(e) => onChange(Number(e.target.value))} className={inputCls} />
         </div>
       );
     case "date":
       return (
         <div>
           {label}
-          <input
-            type="date"
-            value={(value as string)?.slice(0, 10) ?? ""}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full border border-line rounded-sm px-3 py-2 focus-visible:outline-burgundy"
-          />
+          <input type="date" value={(value as string)?.slice(0, 10) ?? ""} onChange={(e) => onChange(e.target.value)} className={inputCls} />
         </div>
       );
     case "textarea":
       return (
         <div>
           {label}
-          <textarea
-            value={(value as string) ?? ""}
-            onChange={(e) => onChange(e.target.value)}
-            rows={5}
-            className="w-full border border-line rounded-sm px-3 py-2 focus-visible:outline-burgundy"
-          />
+          <textarea value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} rows={5} className={inputCls} />
         </div>
       );
     case "checkbox":
       return (
         <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={value === 1 || value === true}
-            onChange={(e) => onChange(e.target.checked ? 1 : 0)}
-          />
+          <input type="checkbox" checked={value === 1 || value === true} onChange={(e) => onChange(e.target.checked ? 1 : 0)} />
           {field.label}
         </label>
       );
@@ -268,11 +306,7 @@ function FieldInput({ field, value, onChange }: { field: FieldSchema; value: unk
       return (
         <div>
           {label}
-          <select
-            value={(value as string) ?? ""}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full border border-line rounded-sm px-3 py-2 focus-visible:outline-burgundy"
-          >
+          <select value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} className={inputCls}>
             <option value="">—</option>
             {field.options?.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -284,12 +318,13 @@ function FieldInput({ field, value, onChange }: { field: FieldSchema; value: unk
       return (
         <div>
           {label}
-          <textarea
-            value={Array.isArray(value) ? (value as string[]).join("\n") : ""}
-            onChange={(e) => onChange(e.target.value.split("\n").map((l) => l.trim()).filter(Boolean))}
+          <LineListField
+            value={value}
+            toText={(arr) => (arr as string[]).join("\n")}
+            fromText={(text) => text.split("\n").map((l) => l.trim()).filter(Boolean)}
             rows={4}
             placeholder="One per line"
-            className="w-full border border-line rounded-sm px-3 py-2 focus-visible:outline-burgundy"
+            onChange={onChange}
           />
         </div>
       );
@@ -297,18 +332,18 @@ function FieldInput({ field, value, onChange }: { field: FieldSchema; value: unk
       return (
         <div>
           {label}
-          <textarea
-            value={Array.isArray(value) ? (value as { value: string; label: string }[]).map((s) => `${s.value} | ${s.label}`).join("\n") : ""}
-            onChange={(e) => {
-              const parsed = e.target.value.split("\n").filter(Boolean).map((line) => {
+          <LineListField
+            value={value}
+            toText={(arr) => (arr as { value: string; label: string }[]).map((s) => `${s.value} | ${s.label}`).join("\n")}
+            fromText={(text) =>
+              text.split("\n").filter((l) => l.trim()).map((line) => {
                 const [v, l] = line.split("|").map((s) => s.trim());
                 return { value: v || "", label: l || "" };
-              });
-              onChange(parsed);
-            }}
+              })
+            }
             rows={4}
             placeholder='One per line: "500+ | Consultations Held"'
-            className="w-full border border-line rounded-sm px-3 py-2 focus-visible:outline-burgundy"
+            onChange={onChange}
           />
         </div>
       );
@@ -316,18 +351,18 @@ function FieldInput({ field, value, onChange }: { field: FieldSchema; value: unk
       return (
         <div>
           {label}
-          <textarea
-            value={Array.isArray(value) ? (value as { title: string; description: string }[]).map((s) => `${s.title} | ${s.description}`).join("\n") : ""}
-            onChange={(e) => {
-              const parsed = e.target.value.split("\n").filter(Boolean).map((line) => {
-                const [t, d] = line.split("|").map((s) => s.trim());
-                return { title: t || "", description: d || "" };
-              });
-              onChange(parsed);
-            }}
+          <LineListField
+            value={value}
+            toText={(arr) => (arr as { title: string; description: string }[]).map((s) => `${s.title} | ${s.description}`).join("\n")}
+            fromText={(text) =>
+              text.split("\n").filter((l) => l.trim()).map((line) => {
+                const [t, ...rest] = line.split("|");
+                return { title: (t || "").trim(), description: rest.join("|").trim() };
+              })
+            }
             rows={5}
             placeholder='One step per line: "Step title | Step description"'
-            className="w-full border border-line rounded-sm px-3 py-2 focus-visible:outline-burgundy"
+            onChange={onChange}
           />
         </div>
       );
@@ -335,30 +370,7 @@ function FieldInput({ field, value, onChange }: { field: FieldSchema; value: unk
       return (
         <div>
           {label}
-          <textarea
-            value={
-              Array.isArray(value)
-                ? (value as { module: string; lessons: string[] }[])
-                    .map((m) => `${m.module}\n${(m.lessons || []).join("\n")}`)
-                    .join("\n\n")
-                : ""
-            }
-            onChange={(e) => {
-              const blocks = e.target.value.split(/\n\s*\n/);
-              const parsed = blocks
-                .map((block) => {
-                  const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
-                  if (!lines.length) return null;
-                  const [module, ...lessons] = lines;
-                  return { module, lessons };
-                })
-                .filter(Boolean);
-              onChange(parsed);
-            }}
-            rows={8}
-            placeholder={"Module title\nLesson 1\nLesson 2\n\n(blank line between modules)"}
-            className="w-full border border-line rounded-sm px-3 py-2 focus-visible:outline-burgundy font-mono text-xs"
-          />
+          <CurriculumField value={value} onChange={onChange} />
         </div>
       );
     case "image":
@@ -366,6 +378,152 @@ function FieldInput({ field, value, onChange }: { field: FieldSchema; value: unk
     default:
       return null;
   }
+}
+
+// ---------------------------------------------------------------------
+// Line-based list editor.
+// Keeps the RAW text in local state so Enter / trailing newlines / blank
+// lines work while typing. Only the parsed result goes up to the form.
+// ---------------------------------------------------------------------
+
+function LineListField({
+  value, toText, fromText, rows, placeholder, onChange,
+}: {
+  value: unknown;
+  toText: (arr: unknown[]) => string;
+  fromText: (text: string) => unknown[];
+  rows: number;
+  placeholder: string;
+  onChange: (v: unknown) => void;
+}) {
+  const [text, setText] = useState(() => toText(toArray(value)));
+
+  return (
+    <textarea
+      value={text}
+      onChange={(e) => {
+        setText(e.target.value);
+        onChange(fromText(e.target.value));
+      }}
+      rows={rows}
+      placeholder={placeholder}
+      className={inputCls}
+    />
+  );
+}
+
+// ---------------------------------------------------------------------
+// Curriculum editor: clear Module -> Lessons structure.
+// ---------------------------------------------------------------------
+
+function CurriculumField({ value, onChange }: { value: unknown; onChange: (v: unknown) => void }) {
+  const modules = normalizeCurriculum(value);
+
+  function update(next: Module[]) {
+    onChange(next);
+  }
+
+  function setModuleName(mi: number, name: string) {
+    update(modules.map((m, i) => (i === mi ? { ...m, module: name } : m)));
+  }
+
+  function setLesson(mi: number, li: number, text: string) {
+    update(
+      modules.map((m, i) =>
+        i === mi ? { ...m, lessons: m.lessons.map((l, j) => (j === li ? text : l)) } : m
+      )
+    );
+  }
+
+  function addLesson(mi: number) {
+    update(modules.map((m, i) => (i === mi ? { ...m, lessons: [...m.lessons, ""] } : m)));
+  }
+
+  function removeLesson(mi: number, li: number) {
+    update(
+      modules.map((m, i) =>
+        i === mi ? { ...m, lessons: m.lessons.filter((_, j) => j !== li) } : m
+      )
+    );
+  }
+
+  function addModule() {
+    update([...modules, { module: "", lessons: [""] }]);
+  }
+
+  function removeModule(mi: number) {
+    if (!confirm("Remove this module and all its lessons?")) return;
+    update(modules.filter((_, i) => i !== mi));
+  }
+
+  function moveModule(mi: number, dir: -1 | 1) {
+    const to = mi + dir;
+    if (to < 0 || to >= modules.length) return;
+    const next = [...modules];
+    [next[mi], next[to]] = [next[to], next[mi]];
+    update(next);
+  }
+
+  return (
+    <div className="space-y-4">
+      {modules.length === 0 && (
+        <p className="text-sm text-charcoal/50">No modules yet. Click &quot;+ Add Module&quot; to start.</p>
+      )}
+
+      {modules.map((m, mi) => (
+        <div key={mi} className="border border-line rounded-sm p-4 bg-ivory-deep/30">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-medium text-burgundy uppercase tracking-wide whitespace-nowrap">
+              Module {mi + 1}
+            </span>
+            <input
+              type="text"
+              value={m.module}
+              onChange={(e) => setModuleName(mi, e.target.value)}
+              placeholder="Module title"
+              className={inputCls + " font-medium"}
+            />
+            <button type="button" onClick={() => moveModule(mi, -1)} disabled={mi === 0} className="text-charcoal/50 hover:text-charcoal disabled:opacity-30 px-1" title="Move up">↑</button>
+            <button type="button" onClick={() => moveModule(mi, 1)} disabled={mi === modules.length - 1} className="text-charcoal/50 hover:text-charcoal disabled:opacity-30 px-1" title="Move down">↓</button>
+            <button type="button" onClick={() => removeModule(mi)} className="text-xs text-charcoal/40 hover:text-burgundy whitespace-nowrap">Remove</button>
+          </div>
+
+          <div className="space-y-2 pl-4 border-l-2 border-line">
+            {m.lessons.map((lesson, li) => (
+              <div key={li} className="flex items-center gap-2">
+                <span className="text-xs text-charcoal/40 w-6 text-right">{li + 1}.</span>
+                <input
+                  type="text"
+                  value={lesson}
+                  onChange={(e) => setLesson(mi, li, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addLesson(mi);
+                    }
+                  }}
+                  placeholder="Lesson title"
+                  className={inputCls}
+                />
+                <button type="button" onClick={() => removeLesson(mi, li)} className="text-charcoal/40 hover:text-burgundy text-sm px-1" title="Remove lesson">✕</button>
+              </div>
+            ))}
+            <button type="button" onClick={() => addLesson(mi)} className="text-xs text-burgundy hover:underline">
+              + Add Lesson
+            </button>
+          </div>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={addModule}
+        className="border border-burgundy text-burgundy rounded-sm px-4 py-2 text-sm font-medium hover:bg-burgundy hover:text-ivory transition-colors"
+      >
+        + Add Module
+      </button>
+    </div>
+  );
 }
 
 function ImageField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {

@@ -27,7 +27,7 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(fu
   { variant = "primary", className = "", children, href, ...props },
   ref
 ) {
-  const classes = `inline-flex items-center justify-center gap-2 px-6 py-3 text-sm tracking-wide transition-colors duration-200 rounded-sm font-medium ${variants[variant]} ${className}`;
+  const classes = `inline-flex items-center justify-center gap-2 px-6 py-3 text-sm tracking-wide transition-colors duration-200 rounded-full font-medium ${variants[variant]} ${className}`;
 
   if (href) {
     const isExternal = /^(https?:|mailto:|tel:)/.test(href);
