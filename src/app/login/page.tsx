@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,7 +26,10 @@ export default function AdminLoginPage() {
         setLoading(false);
         return;
       }
-      const next = searchParams.get("next") || "/admin";
+      const param = new URLSearchParams(window.location.search).get("next");
+      // Only allow same-site relative paths to avoid open redirects.
+      const next =
+        param && param.startsWith("/") && !param.startsWith("//") ? param : "/admin";
       router.push(next);
       router.refresh();
     } catch {

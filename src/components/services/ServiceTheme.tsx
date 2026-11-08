@@ -3,7 +3,7 @@ import type { ReactNode, CSSProperties } from "react";
 
 export type ServiceKey =
   | "vaastu"
-  | "tarot card"
+  | "tarot"
   | "astrology"
   | "reiki"
   | "signature"

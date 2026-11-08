@@ -19,7 +19,6 @@ export async function POST(request: NextRequest) {
 
   const rows = await query<AdminRow[]>("SELECT * FROM admin_users WHERE email = ? LIMIT 1", [email]);
   const admin = rows[0];
-
   // Compare against a fixed dummy hash when no user is found, so the
   // response time doesn't leak whether the email exists (a basic
   // timing-attack mitigation for the login endpoint).

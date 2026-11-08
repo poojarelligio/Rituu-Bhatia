@@ -4,6 +4,20 @@
 --   mysql -u youruser -p yourdatabase < schema.sql
 -- =====================================================================
 
+CREATE DATABASE db_rb_app
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+CREATE USER 'mysql_rb_app'@'localhost'
+IDENTIFIED BY 'Rb@pp2024';
+
+GRANT ALL PRIVILEGES ON db_rb_app.*
+TO 'mysql_rb_app'@'localhost';
+
+FLUSH PRIVILEGES;
+
+EXIT;
+
 CREATE TABLE IF NOT EXISTS admin_users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(191) NOT NULL,
