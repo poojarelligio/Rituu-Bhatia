@@ -114,7 +114,7 @@ export default function VaastuHero() {
 In a world that moves faster every day, we often look for answers to life's most important questions — about our homes, relationships, career, prosperity and personal growth.
               </p>
               <p>
-                For centuries, practices like Vaastu, Astrology, Tarot and Reiki have offered different ways to explore our surroundings, understand life's patterns and reconnect with ourselves.
+                For centuries, practices like Vaastu, Astrology, Tarot Card and Reiki have offered different ways to explore our surroundings, understand life's patterns and reconnect with ourselves.
               </p>
               <p>
                 Rooted in traditional knowledge and the spiritual legacy of her Guru, Rituu Bhatia brings these practices together through a grounded, personalised approach to spiritual guidance and transformation.

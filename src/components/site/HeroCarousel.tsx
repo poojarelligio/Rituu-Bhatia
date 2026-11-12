@@ -33,7 +33,7 @@ const SLIDES: Slide[] = [
     headline: "Guidance for Your Space,",
     highlightedText: "Life & Inner Journey.",
     description:
-      "Through Vaastu, Astrology, Tarot and Reiki, I offer personalised guidance to help you find clarity, explore new perspectives and bring greater balance to different aspects of your life.",
+      "Through Vaastu, Astrology, Tarot Card and Reiki, I offer personalised guidance to help you find clarity, explore new perspectives and bring greater balance to different aspects of your life.",
     primaryCta: { label: "Explore Consultations", href: "/services" },
     secondaryCta: { label: "Take the Free Assessment", href: "/assessment" },
     image: "/images/hero/hero-assessment.jpg",
