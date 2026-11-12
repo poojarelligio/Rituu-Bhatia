@@ -96,12 +96,12 @@ export default function ContactPage() {
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-ivory">Email</p>
                   <div className="space-y-0.5">
-                    <a href="mailto:info@rituubhatia.in" className="block break-all text-sm text-ivory/70 transition-colors hover:text-gold-soft">
-                      info@rituubhatia.in
-                    </a>
                     <a href="mailto:rituubhatiasocial@gmail.com" className="block break-all text-sm text-ivory/70 transition-colors hover:text-gold-soft">
                       rituubhatiasocial@gmail.com
                     </a>
+                    {/* <a href="mailto:rituubhatiasocial@gmail.com" className="block break-all text-sm text-ivory/70 transition-colors hover:text-gold-soft">
+                      rituubhatiasocial@gmail.com
+                    </a> */}
                   </div>
                 </div>
               </div>
