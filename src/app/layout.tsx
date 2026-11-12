@@ -27,7 +27,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Rituu Bhatia — Tarot, Vaastu, Astrology & Reiki",
+    default: "Rituu Bhatia — Tarot Card, Vaastu, Astrology & Reiki",
     template: "%s | Rituu Bhatia",
   },
   description:
