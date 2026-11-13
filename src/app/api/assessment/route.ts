@@ -1,29 +1,50 @@
+
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
+function parseOptions(value: unknown) {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = JSON.parse(value);
+
+    if (!Array.isArray(parsed)) {
+      throw new Error("Invalid assessment options format");
+    }
+
+    return parsed;
+  }
+
+  if (value && typeof value === "object") {
+    // Handle JSON objects returned by the database driver
+    return Object.values(value);
+  }
+
+  throw new Error("Assessment options are empty or invalid");
+}
+
 export async function GET() {
   try {
-    // Fetch questions with options as JSON string
     const questions = await query<{
       id: number;
       question: string;
-      options: string; // This is a JSON string from the database
+      options: unknown;
       sort_order: number;
     }[]>(`
-      SELECT id, question, options, sort_order 
-      FROM assessment_questions 
+      SELECT id, question, options, sort_order
+      FROM assessment_questions
       ORDER BY sort_order ASC, id ASC
     `);
 
-    // ✅ Parse the JSON string to an array for each question
     const parsedQuestions = questions.map((q) => ({
       id: q.id,
       question: q.question,
-      options: JSON.parse(q.options), // Convert string to array
+      options: parseOptions(q.options),
       sort_order: q.sort_order,
     }));
 
-    // Fetch result tiers
     const resultTiers = await query<{
       id: number;
       min_score: number;
@@ -31,8 +52,8 @@ export async function GET() {
       title: string;
       description: string;
     }[]>(`
-      SELECT id, min_score, max_score, title, description 
-      FROM assessment_results 
+      SELECT id, min_score, max_score, title, description
+      FROM assessment_results
       ORDER BY min_score ASC
     `);
 
@@ -40,8 +61,10 @@ export async function GET() {
       questions: parsedQuestions,
       resultTiers,
     });
+
   } catch (error) {
     console.error("Error fetching assessment:", error);
+
     return NextResponse.json(
       { error: "Failed to load assessment" },
       { status: 500 }
