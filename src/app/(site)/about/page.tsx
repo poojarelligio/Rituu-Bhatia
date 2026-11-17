@@ -132,7 +132,7 @@ export default function AboutPage() {
       <PageHeader
         eyebrow="HER JOURNEY"
         title="ABOUT RITUU BHATIA"
-        description="A Spiritual Coach specialising in Astrology, Tarot Card, Vaastu and Reiki to guide you toward clarity, balance and personal growth."
+        description="A Spiritual Coach specialising in Vaastu, Astrology, Tarot Card and Reiki to guide you toward clarity, balance and personal growth."
       />
 
       {/* ───────────── 1. Intro ───────────── */}

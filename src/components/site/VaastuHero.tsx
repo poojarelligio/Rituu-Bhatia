@@ -117,10 +117,10 @@ In a world that moves faster every day, we often look for answers to life's most
                 For centuries, practices like Vaastu, Astrology, Tarot Card and Reiki have offered different ways to explore our surroundings, understand life's patterns and reconnect with ourselves.
               </p>
               <p>
-                Rooted in traditional knowledge and the spiritual legacy of her Guru, Rituu Bhatia brings these practices together through a grounded, personalised approach to spiritual guidance and transformation.
+                Rooted in traditional knowledge and the spiritual legacy of my Guru, I brings these practices together through a grounded, personalised approach to spiritual guidance and transformation.
               </p>
               <p>
-                Her philosophy is simple: it's not just about finding answers, but gaining clarity, understanding your choices and moving forward with greater awareness.
+                Her philosophy is simple: gaining clarity, understanding your choices and moving forward with greater awareness.
               </p>
             </motion.div>
 
@@ -130,7 +130,7 @@ In a world that moves faster every day, we often look for answers to life's most
                 className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-ink px-8 py-3.5 text-sm font-semibold text-ivory transition-all duration-300 hover:-translate-y-0.5 hover:bg-ink-mid hover:shadow-[0_14px_40px_-12px_var(--color-ink)]"
               >
                 <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-                <span className="relative">Book Appointment Now</span>
+                <span className="relative">Book an Appointment</span>
                 <ArrowRight size={16} className="relative text-gold transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </motion.div>
@@ -195,7 +195,7 @@ In a world that moves faster every day, we often look for answers to life's most
                     </div>
                     <div>
                       <p className="font-display text-2xl text-gold-soft">Expert</p>
-                      <p className="font-label text-[10px] uppercase tracking-wider text-ivory/70">Vastu Knowledge</p>
+                      <p className="font-label text-[10px] uppercase tracking-wider text-ivory/70">Vaastu Knowledge</p>
                     </div>
                   </div>
                 </div>

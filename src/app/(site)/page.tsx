@@ -126,9 +126,25 @@ function Sparkles() {
   );
 }
 
-const marqueeWords = ["Uncomfortable Spaces", "Vaastu", "Emotional Imbalance", "Reiki Healing", "Clarity & Direction", "Tarot Card Reading", "Life & Career Questions","Astrology"];
+const marqueeWords = ["Uncomfortable Spaces", "Vaastu", "Life & Career Questions","Astrology","Clarity & Direction", "Tarot Card Reading" , "Emotional Imbalance", "Reiki Healing"];
 
 const homeServices = [
+   {
+    href: "/services/vaastu",
+    code: "VA",
+    title: "Vaastu Consultation",
+    image: "/images/home/vaastu-portrait.jpg",
+    alt: "Vaastu Consultation with Rituu Bhatia",
+    text: "Bring greater harmony to the spaces where you live and work.",
+  },
+   {
+    href: "/services/astrology",
+    code: "AS",
+    title: "Astrology Reading",
+    image: "/images/home/astrology-portrait.jpg",
+    alt: "Astrology Reading with Rituu Bhatia",
+    text: "Understand the patterns, possibilities and cycles reflected in your birth chart.",
+  },
   {
     href: "/services/tarot-reading",
     code: "TR",
@@ -136,22 +152,6 @@ const homeServices = [
     image: "/images/home/tarot-portrait.jpg",
     alt: "Tarot Card Reading with Rituu Bhatia",
     text: "Use the cards as a tool for reflection, clarity and direction.",
-  },
-  {
-    href: "/services/vaastu",
-    code: "VA",
-    title: "Vaastu Consultation",
-    image: "/images/home/vaastu-portrait.jpg",
-    alt: "Vaastu Consultation with Rituu Bhatia",
-    text: "Bring greater harmony to the spaces you live and work in.",
-  },
-  {
-    href: "/services/astrology",
-    code: "AS",
-    title: "Astrology Reading",
-    image: "/images/home/astrology-portrait.jpg",
-    alt: "Astrology Reading with Rituu Bhatia",
-    text: "Understand the patterns, possibilities and cycles reflected in your birth chart.",
   },
   {
     href: "/services/reiki-healing",
@@ -237,16 +237,27 @@ export default async function HomePage() {
               <div className="v-draw mb-5 h-[3px] w-24 rounded-full bg-gradient-to-r from-gold-soft to-gold" />
               <p className="leading-relaxed text-charcoal/65">
                 Every person’s journey is unique, and so are their questions and needs. Through Vaastu,
-                Astrology, Tarot Card Reading and Reiki, Rituu offers personalised guidance to help you
+                Astrology, Tarot Card Reading and Reiki, I offer personalised guidance to help you
                 find clarity and perspective in your home, career, relationships, business and personal
                 life.
               </p>
             </div>
-            <div className="v-right">
-              <Button href="/services" variant="ghost" className="sm:mb-2">
-                Explore Consultations →
-              </Button>
-            </div>
+            
+<div className="v-right">
+  <Link
+    href="/services"
+    className="group/btn relative inline-flex min-h-12 items-center gap-3 overflow-hidden rounded-full border border-ink bg-ink px-7 py-3.5 text-sm font-semibold text-ivory shadow-md transition-all duration-300 hover:-translate-y-1 hover:bg-ink-mid hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+  >
+    <span className="relative">Explore Consultations</span>
+    <span
+      aria-hidden="true"
+      className="relative text-gold-soft transition-transform duration-300 group-hover/btn:translate-x-1.5"
+    >
+      →
+    </span>
+  </Link>
+</div>
+
           </div>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -269,9 +280,9 @@ export default async function HomePage() {
                 <div aria-hidden className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
 
                 <div className="absolute inset-x-0 top-0 flex items-start justify-between p-5">
-                  <span className="index-tab rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] text-ivory backdrop-blur-md">
+                  {/* <span className="index-tab rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] text-ivory backdrop-blur-md">
                     {s.code}
-                  </span>
+                  </span> */}
                   {/* <span className="rounded-full bg-gradient-to-br from-gold-soft to-gold px-3 py-1 text-[11px] font-semibold text-ink shadow-[0_6px_20px_-6px_var(--color-gold)] transition-transform duration-500 group-hover:scale-110">
                     ₹99
                   </span> */}
@@ -396,9 +407,10 @@ export default async function HomePage() {
                   </div>
 
                   <h3 className="mb-4 font-display text-3xl font-light leading-tight sm:text-4xl">
-                    Don&apos;t just listen. <br />
-                    <span className="v-grad-gold italic">Experience the practice.</span>
+                    Experience the practice<br />
+                    <span className="v-grad-gold italic">Live. </span>
                   </h3>
+                  
                   <p className="mb-8 max-w-sm text-sm leading-relaxed text-ivory/70">
                     Step beyond online content through live workshops, interactive sessions and experiential learning, from introductory experiences to deeper guided practice.
                   </p>
@@ -474,21 +486,45 @@ export default async function HomePage() {
                     <p className="index-tab mb-4 text-[10px] uppercase tracking-widest text-charcoal/40">Featured Courses</p>
                     {courses.length > 0 ? (
                       <div className="space-y-3">
-                        {courses.slice(0, 3).map((course, i) => (
-                          <Link
-                            key={course.id}
-                            href={`/courses/${course.slug}`}
-                            className="group/item flex items-center justify-between gap-4 rounded-xl border border-line bg-white/80 px-4 py-3.5 transition-all duration-300 hover:translate-x-1.5 hover:border-gold/60 hover:bg-white hover:shadow-[0_14px_30px_-18px_var(--color-gold)]"
-                          >
-                            <div className="flex min-w-0 items-center gap-4">
-                              <span className="index-tab shrink-0 rounded-full bg-gold/15 px-2.5 py-1 text-[10px] text-gold-deep">
-                                {String(i + 1).padStart(2, "0")}
-                              </span>
-                              <p className="truncate text-sm text-charcoal/85 transition-colors group-hover/item:text-gold-deep">{course.title}</p>
-                            </div>
-                            <span className="shrink-0 text-charcoal/30 transition-all group-hover/item:translate-x-1 group-hover/item:text-gold-deep">→</span>
-                          </Link>
-                        ))}
+                        
+{courses.slice(0, 3).map((course, i) => (
+  <Link
+    key={course.id}
+    href={`/courses/${course.slug}`}
+    className="group/item flex items-center justify-between gap-4 rounded-xl border border-line bg-white/90 px-4 py-3.5 transition-all duration-300 hover:translate-x-1.5 hover:border-gold/60 hover:bg-white hover:shadow-[0_14px_30px_-18px_var(--color-gold)]"
+  >
+    <div className="flex min-w-0 items-center gap-4">
+      <span className="index-tab shrink-0 rounded-full bg-gold/15 px-2.5 py-1 text-[10px] text-gold-deep">
+        {String(i + 1).padStart(2, "0")}
+      </span>
+
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold text-charcoal transition-colors group-hover/item:text-gold-deep">
+          {course.title}
+        </p>
+
+        <div className="mt-1 flex flex-wrap items-center gap-3">
+          {course.price_display && (
+            <span className="text-xs font-bold text-gold-deep">
+              {course.price_display}
+            </span>
+          )}
+
+          {course.duration && (
+            <span className="text-xs text-charcoal/60">
+              {course.duration}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <span className="shrink-0 text-charcoal/40 transition-all group-hover/item:translate-x-1 group-hover/item:text-gold-deep">
+      →
+    </span>
+  </Link>
+))}
+
                       </div>
                     ) : (
                       <p className="py-4 text-sm italic text-charcoal/50">New courses opening soon.</p>
@@ -513,37 +549,51 @@ export default async function HomePage() {
               <Sparkles />
               <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent" />
 
-              <div className="relative px-6 py-14 md:px-10">
-                <div className="mb-14 flex items-center gap-6">
-                  <span className="h-px flex-1 bg-gradient-to-r from-transparent to-gold/50" />
-                  <p className="whitespace-nowrap font-display text-lg font-light uppercase tracking-[0.25em] text-gold-soft sm:text-xl">
-                    The Learning Journey
-                  </p>
-                  <span className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/50" />
-                </div>
+              <div className="relative px-4 py-10 sm:px-6 sm:py-14 md:px-10">
+  <div className="mb-10 flex items-center gap-3 sm:mb-14 sm:gap-6">
+    <span className="h-px min-w-0 flex-1 bg-gradient-to-r from-transparent to-gold/50" />
 
-                <div className="relative grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-6">
-                  {/* line draws itself as you scroll */}
-                  <div aria-hidden className="absolute left-[16.6%] right-[16.6%] top-8 hidden h-px bg-gold/10 md:block">
-                    <div className="v-draw h-full bg-gradient-to-r from-gold/20 via-gold to-gold/20" />
-                  </div>
+    <p className="shrink-0 text-center font-display text-sm font-light uppercase tracking-[0.12em] text-gold-soft sm:text-lg sm:tracking-[0.2em] md:text-xl md:tracking-[0.25em]">
+      The Learning Journey
+    </p>
 
-                  {journeySteps.map((item, n) => {
-                    const Icon = item.icon;
-                    return (
-                      <div key={item.step} className="group/step relative text-center">
-                        <div style={idx(n)} className="v-pop relative z-10 mx-auto mb-5 grid h-16 w-16 place-items-center rounded-full border border-gold/60 bg-ink/80 text-gold shadow-[0_0_30px_-8px_var(--color-gold)] backdrop-blur transition-all duration-500 group-hover/step:scale-110 group-hover/step:bg-gold group-hover/step:text-ink">
-                          <Icon size={26} strokeWidth={1.5} />
-                        </div>
-                        <div style={idx(n + 1)} className="v-reveal">
-                          <p className="index-tab mb-3 text-[11px] uppercase tracking-widest text-gold-soft">{item.step}</p>
-                          <p className="mx-auto max-w-[16rem] text-sm leading-relaxed text-ivory/80">{item.body}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+    <span className="h-px min-w-0 flex-1 bg-gradient-to-l from-transparent to-gold/50" />
+  </div>
+
+  <div className="relative grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-6">
+    {/* line draws itself as you scroll */}
+    <div
+      aria-hidden
+      className="absolute left-[16.6%] right-[16.6%] top-8 hidden h-px bg-gold/10 md:block"
+    >
+      <div className="v-draw h-full bg-gradient-to-r from-gold/20 via-gold to-gold/20" />
+    </div>
+
+    {journeySteps.map((item, n) => {
+      const Icon = item.icon;
+
+      return (
+        <div key={item.step} className="group/step relative text-center">
+          <div
+            style={idx(n)}
+            className="v-pop relative z-10 mx-auto mb-5 grid h-16 w-16 place-items-center rounded-full border border-gold/60 bg-ink/80 text-gold shadow-[0_0_30px_-8px_var(--color-gold)] backdrop-blur transition-all duration-500 group-hover/step:scale-110 group-hover/step:bg-gold group-hover/step:text-ink"
+          >
+            <Icon size={26} strokeWidth={1.5} />
+          </div>
+
+          <div style={idx(n + 1)} className="v-reveal">
+            <p className="index-tab mb-3 text-[11px] uppercase tracking-widest text-gold-soft">
+              {item.step}
+            </p>
+            <p className="mx-auto max-w-[16rem] text-sm leading-relaxed text-ivory/80">
+              {item.body}
+            </p>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</div>
             </div>
           </div>
         </section>
@@ -554,7 +604,7 @@ export default async function HomePage() {
 
       {/* Testimonials */}
       {testimonials.length > 0 && (
-        <TestimonialSlider testimonials={testimonials} title="What our clients say" eyebrow="TESTIMONIALS" />
+        <TestimonialSlider testimonials={testimonials} title="What my clients say" eyebrow="TESTIMONIALS" />
       )}
 
       {/* Videos / happy clients */}

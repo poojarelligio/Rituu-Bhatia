@@ -88,7 +88,7 @@ export default function Footer() {
               <li><Link href="/services" className="hover:text-ivory transition-colors">Services</Link></li>
               <li><Link href="/courses" className="hover:text-ivory transition-colors">Courses & Training</Link></li>
               <li><Link href="/workshops-events" className="hover:text-ivory transition-colors">Workshops & Events</Link></li>
-              <li><Link href="/success-stories" className="hover:text-ivory transition-colors">Success Stories</Link></li>
+              {/* <li><Link href="/success-stories" className="hover:text-ivory transition-colors">Success Stories</Link></li> */}
               <li><Link href="/resources" className="hover:text-ivory transition-colors">Free Resources</Link></li>
               <li><Link href="/knowledge" className="hover:text-ivory transition-colors">Blog</Link></li>
               <li><Link href="/community" className="hover:text-ivory transition-colors">Community</Link></li>

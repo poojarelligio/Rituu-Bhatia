@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Phone, Mail, MapPin, ChevronDown, MessageCircle, Lock, Navigation } from "lucide-react";
 import { FaInstagram, FaFacebook, FaLinkedin, FaYoutube, FaWhatsapp } from "react-icons/fa";
 import PageHeader from "@/components/ui/PageHeader";
-import { Sparkle, Sparkles, dly, idx, inkBtn, pill, pillDark, shine } from "@/components/ui/Decor";
+import { Sparkle, Sparkles, dly, idx, inkBtn, pillDark, shine } from "@/components/ui/Decor";
 
 interface FAQ {
   id: number;
@@ -20,7 +20,7 @@ const STUDIO_ADDRESS =
 const MAP_EMBED = `https://maps.google.com/maps?q=${encodeURIComponent(STUDIO_ADDRESS)}&z=16&output=embed`;
 const MAP_DIRECTIONS = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(STUDIO_ADDRESS)}`;
 
-/* Add this photo to /public/images/contact/faq.jpg (portrait, 4:5) */
+/* Photo lives at /public/images/contact.jpg (portrait, 4:5) */
 const FAQ_IMAGE = "/images/contact.jpg";
 
 export default function ContactPage() {
@@ -52,12 +52,16 @@ export default function ContactPage() {
   const iconCircle =
     "grid h-11 w-11 shrink-0 place-items-center rounded-full border border-gold/40 bg-gold/10 text-gold transition-all duration-300 group-hover:scale-110 group-hover:bg-gold group-hover:text-ink";
 
+  /* One text size for every value in the card (phone, WhatsApp, email, address) */
+  const valueText = "text-sm leading-relaxed text-ivory/70";
+  const valueLink = `${valueText} transition-colors hover:text-gold-soft`;
+
   return (
     <>
       <PageHeader
         eyebrow="GET IN TOUCH"
         title="Contact"
-        description="Questions before booking? Send a note and we'll get back within a day."
+        description="Questions before booking? Send a note and I'll get back to you within a day."
       />
 
       {/* ───────────── Details + map ───────────── */}
@@ -75,17 +79,15 @@ export default function ContactPage() {
             <Sparkles />
             <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
 
-            <h2 className="mb-3 font-display text-3xl font-light text-ivory lg:text-4xl">
-              <span className="v-grad-gold">Get in touch</span>
-            </h2>
-            <div className="v-draw mb-8 h-[3px] w-20 rounded-full bg-gradient-to-r from-gold-soft to-gold" />
+            {/* No visible heading here: the page header above already says "Contact" */}
+            <h2 className="sr-only">Contact details</h2>
 
             <div className="space-y-4">
               <div className={rowCard}>
                 <span className={iconCircle}><Phone size={18} strokeWidth={1.5} /></span>
                 <div>
                   <p className="text-sm font-medium text-ivory">Phone</p>
-                  <a href="tel:+917021063008" className="text-sm text-ivory/70 transition-colors hover:text-gold-soft">
+                  <a href="tel:+917021063008" className={valueLink}>
                     +91 70210 63008
                   </a>
                 </div>
@@ -96,12 +98,9 @@ export default function ContactPage() {
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-ivory">Email</p>
                   <div className="space-y-0.5">
-                    <a href="mailto:rituubhatiasocial@gmail.com" className="block break-all text-sm text-ivory/70 transition-colors hover:text-gold-soft">
+                    <a href="mailto:rituubhatiasocial@gmail.com" className={`block break-all ${valueLink}`}>
                       rituubhatiasocial@gmail.com
                     </a>
-                    {/* <a href="mailto:rituubhatiasocial@gmail.com" className="block break-all text-sm text-ivory/70 transition-colors hover:text-gold-soft">
-                      rituubhatiasocial@gmail.com
-                    </a> */}
                   </div>
                 </div>
               </div>
@@ -110,17 +109,32 @@ export default function ContactPage() {
                 <span className={iconCircle}><MapPin size={18} strokeWidth={1.5} /></span>
                 <div>
                   <p className="text-sm font-medium text-ivory">Studio</p>
-                  <address className="not-italic text-sm leading-relaxed text-ivory/70">
+                  <address className={`not-italic ${valueText}`}>
                     Office No: 8, 8th Floor, Arunachal Bhavan,<br />
                     Plot No. 19, Sector 30A, Vashi,<br />
                     Navi Mumbai, Maharashtra 400703
                   </address>
                 </div>
               </div>
+
+              {/* <div className={rowCard}>
+                <span className={iconCircle}><FaWhatsapp size={18} /></span>
+                <div>
+                  <p className="text-sm font-medium text-ivory">WhatsApp</p>
+                  <a
+                    href="https://wa.me/917021063008"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={valueLink}
+                  >
+                    +91 70210 63008
+                  </a>
+                </div>
+              </div> */}
             </div>
 
             <div className="mt-8 border-t border-white/10 pt-6">
-              <p className="mb-4 text-sm font-medium text-ivory">Connect with Rituu Bhatia</p>
+              <p className="mb-4 text-sm font-medium text-ivory">Follow me</p>
               <div className="flex flex-wrap items-center gap-3">
                 {socialLinks.map((social) => {
                   const Icon = social.icon;

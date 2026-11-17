@@ -16,7 +16,7 @@ const videoData = [
   {
     id: 1,
     embedUrl: "https://www.youtube.com/embed/GRuJEcwx0hQ",
-    title: "Actress Testimonial",
+    title: "Shipsy Rana-Actress Testimonial",
     description: "Hear how Rituu's guidance brought clarity and transformation.",
     featured: true,
     badge: "Featured",
@@ -25,7 +25,7 @@ const videoData = [
   {
     id: 2,
     embedUrl: "https://www.youtube.com/embed/KWNGTSguHvo",
-    title: "Actor Testimonial",
+    title: "Actress Testimonial",
     description: "A journey from confusion to confidence with Rituu's sessions.",
     featured: true,
     badge: "Featured",
@@ -51,8 +51,8 @@ const videoData = [
   },
   {
     id: 5,
-    embedUrl: "https://youtu.be/f-UkZZPwNRE?si=lTARoyz5kvR7-93g",
-    title: "Another Client Story",
+    embedUrl: "https://www.youtube.com/embed/f-UkZZPwNRE?si=i0h2YYOIIg2uI77W",
+    title: "Vaastu & Tarot Card Feedback",
     description: "Real transformation through Rituu's sessions.",
     featured: false,
     badge: "Client Story",
@@ -93,7 +93,7 @@ export default function HappyClients() {
                 <div
                   key={video.id}
                   onClick={() => setSelectedVideo(video.embedUrl)}
-                  className="group relative aspect-video md:aspect-[16/9] bg-charcoal rounded-sm overflow-hidden cursor-pointer border border-line hover:border-gold transition-all duration-500 shadow-lg hover:shadow-2xl"
+                 className="group relative w-full aspect-video bg-charcoal rounded-sm overflow-hidden cursor-pointer border border-line hover:border-gold transition-all duration-500 shadow-lg hover:shadow-2xl"
                 >
                   {/* Thumbnail */}
                   <Image
@@ -121,20 +121,23 @@ export default function HappyClients() {
                   </div>
 
                   {/* Star Rating - Top Right */}
-                  <div className="absolute top-4 right-4 z-10 flex items-center gap-1 bg-charcoal/50 backdrop-blur-sm px-2 py-1 rounded-full">
+                  {/* <div className="absolute top-4 right-4 z-10 flex items-center gap-1 bg-charcoal/50 backdrop-blur-sm px-2 py-1 rounded-full">
                     <Star className="w-3 h-3 text-gold fill-gold" />
                     <span className="text-xs text-ivory/80">{video.starRating}.0</span>
-                  </div>
+                  </div> */}
 
                   {/* Content at bottom */}
-                  <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
-                    <h3 className="font-display text-xl md:text-2xl text-ivory font-light leading-tight mb-1">
-                      {video.title}
-                    </h3>
-                    <p className="text-ivory/70 text-sm md:text-base line-clamp-2">
-                      {video.description}
-                    </p>
-                  </div>
+                 <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-charcoal/95 via-charcoal/70 to-transparent px-3 pb-3 pt-12 sm:px-5 sm:pb-5 sm:pt-16 md:px-6 md:pb-6">
+
+  <h3 className="font-display text-base leading-snug font-light text-ivory sm:text-xl md:text-2xl line-clamp-2">
+    {video.title}
+  </h3>
+
+  <p className="mt-1 text-xs leading-relaxed text-ivory/75 sm:text-sm md:text-base line-clamp-2">
+    {video.description}
+  </p>
+
+</div>
                 </div>
               );
             })}
@@ -189,10 +192,10 @@ export default function HappyClients() {
                     </div>
 
                     {/* Star Rating */}
-                    <div className="absolute bottom-14 left-4 z-10 flex items-center gap-1">
+                    {/* <div className="absolute bottom-14 left-4 z-10 flex items-center gap-1">
                       <Star className="w-3 h-3 text-gold fill-gold" />
                       <span className="text-[10px] text-ivory/50">{video.starRating}.0</span>
-                    </div>
+                    </div> */}
 
                     {/* Info - Bottom */}
                     <div className="absolute bottom-0 left-0 right-0 p-4">

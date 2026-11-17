@@ -45,7 +45,7 @@ function SaveBadge() {
 
 function Price({ course, dark = false }: { course: Course; dark?: boolean }) {
   return (
-    <span className={`text-sm font-semibold ${dark ? "text-gold" : "text-gold-deep"}`}>
+    <span className={`text-xl font-semibold ${dark ? "text-gold" : "text-gold-deep"}`}>
       {course.discount_price_display || course.price_display}
       {course.discount_price_display && (
         <span className={`ml-2 font-normal line-through ${dark ? "text-ivory/40" : "text-charcoal/40"}`}>

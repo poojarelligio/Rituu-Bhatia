@@ -25,10 +25,10 @@ export const BOOKING = {
 
 /** Edit names / prices to match your real services. */
 export const SERVICES = [
-  { id: "tarot", name: "Tarot Card Reading", duration: "30 min" },
-  { id: "astrology", name: "Astrology Consultation", duration: "30 min" },
-  { id: "vaastu", name: "Vaastu Consultation", duration: "30 min" },
-  { id: "reiki", name: "Reiki Session", duration: "30 min" },
+    { id: "vaastu", name: "Vaastu Consultation", duration: "30 min" },
+    { id: "astrology", name: "Astrology Consultation", duration: "30 min" },
+    { id: "tarot", name: "Tarot Card Reading", duration: "30 min" },
+    { id: "reiki", name: "Reiki Session", duration: "30 min" },
 ] as const;
 
 export const SERVICE_IDS = SERVICES.map((s) => s.id) as string[];

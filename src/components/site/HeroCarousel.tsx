@@ -22,9 +22,9 @@ const SLIDES: Slide[] = [
     headline: "A Legacy",
     highlightedText: "I Am Carrying Forward.",
     description:
-      "Not knowledge gathered from books alone, but wisdom passed down by my Guru through the journey of Diksha, Sadhana and Siddhi, a legacy I continue through Vaastu, Astrology and Tarot Card",
+      "The wisdom I carry is not gathered from books alone; it is a sacred legacy received from my Guru. Through Diksha, Sadhana and Siddhi, I continue to honour and carry this legacy forward through the practices of Vaastu, Astrology and Tarot Card.",
     primaryCta: { label: "Discover My Journey", href: "/about" },
-    secondaryCta: { label: "Book an Appointment", href: "/appointment" },
+    secondaryCta: { label: "Book a Session", href: "/appointment" },
     image: "/images/hero/slide1.jpg",
     imageAlt: "Rituu Bhatia Tarot Card Reading",
   },
@@ -44,7 +44,7 @@ const SLIDES: Slide[] = [
     headline: "Learn. Practise.",
     highlightedText: "Transform.",
     description:
-      "Explore Vaastu, Tarot Card, Astrology and Reiki through personalised sessions, workshops and guided training. Whether you seek guidance or wish to learn these practices, your journey begins here.",
+      "Explore your journey through individual sessions, group programs, workshops and structured training in Vaastu, Astrology, Tarot Card and Reiki. Whether you seek personal guidance or wish to learn and practise these spiritual disciplines, find a path that feels right for you.",
     primaryCta: { label: "Explore Sessions & Training", href: "/courses" },
     secondaryCta: { label: "Upcoming Workshops", href: "/workshops-events" },
     image: "/images/hero/slide3.jpg",
@@ -156,7 +156,7 @@ export default function HeroCarousel() {
                     </div>
 
                     {/* Trust badges */}
-                    <div className="mt-8 flex flex-wrap items-center gap-4 text-xs text-ivory/50">
+                    <div className="mt-8 flex flex-wrap items-center gap-4 text-base sm:text-lg text-ivory/50">
                       {/* <span className="flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-gold"></span>
                         Free sessions
@@ -167,7 +167,7 @@ export default function HeroCarousel() {
                         No payment needed
                       </span>
                       <span className="w-px h-3 bg-ivory/20"></span> */}
-                      <span className="flex items-center gap-1.5">
+                      <span className="flex items-center gap-1.5 carousal_subh">
                         <span className="w-1.5 h-1.5 rounded-full bg-gold"></span>
                         100% confidential
                       </span>

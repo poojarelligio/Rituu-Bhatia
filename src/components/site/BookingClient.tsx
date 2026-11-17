@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Loader2, MapPin, Video, CalendarCheck, Clock } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Loader2, MapPin, Video, CalendarCheck, Clock, Info } from "lucide-react";
 
 interface Service {
   id: string;
   name: string;
   duration: string;
+  price?: number; // full session price in INR
+  advance?: number; // advance payable to confirm, in INR
 }
 interface Slot {
-  time: string;
+  time: string; // "HH:MM" in IST
   label: string;
 }
 interface Props {
@@ -18,10 +20,15 @@ interface Props {
   maxDaysAhead: number;
   openWeekdays: number[];
   studioAddress: string;
+  confirmHours?: number; // how soon the confirmation is sent after payment
 }
+
+const FALLBACK_STUDIO =
+  "Office No: 8, 8th Floor, Arunachal Bhavan, Plot No. 19, Sector 30A, Vashi, Navi Mumbai, Maharashtra 400703";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const DOW = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const IST_ZONES = ["Asia/Calcutta", "Asia/Kolkata"];
 
 const addDays = (d: string, n: number) => {
   const t = new Date(`${d}T00:00:00Z`);
@@ -30,6 +37,24 @@ const addDays = (d: string, n: number) => {
 };
 const pretty = (d: string) =>
   new Date(`${d}T00:00:00Z`).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+
+const rupees = (n?: number) => (n && n > 0 ? `₹${n.toLocaleString("en-IN")}` : null);
+
+/* ONE sentence about what happens next. Used in the notice, the button hint and the success screen,
+   so the visitor never sees conflicting promises. Edit here to change it everywhere. */
+const confirmLine = (advance: number | undefined, hours: number) =>
+  `${rupees(advance) ? `Pay ${rupees(advance)}` : "Pay the advance"} to confirm. We email your confirmation and calendar invite within ${hours} hours of payment.`;
+
+/* Convert an IST slot to the visitor's own time zone. Returns null if they are in IST or it can't be parsed. */
+function localLabel(date: string, time: string, tz: string): string | null {
+  if (!tz || IST_ZONES.includes(tz) || !date || !time) return null;
+  const hhmm = time.length === 5 ? `${time}:00` : time;
+  const d = new Date(`${date}T${hhmm}+05:30`);
+  if (isNaN(d.getTime())) return null;
+  const day = d.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short", timeZone: tz });
+  const t = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz });
+  return `${day}, ${t}`;
+}
 
 const field =
   "w-full rounded-xl border border-line bg-white/90 px-4 py-3 text-sm text-charcoal outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/30";
@@ -43,7 +68,17 @@ function StepTitle({ n, children }: { n: number; children: React.ReactNode }) {
   );
 }
 
-export default function BookingClient({ services, today, maxDaysAhead, openWeekdays, studioAddress }: Props) {
+export default function BookingClient({
+  services,
+  today,
+  maxDaysAhead,
+  openWeekdays,
+  studioAddress,
+  confirmHours = 2,
+}: Props) {
+  const address = studioAddress?.trim() || FALLBACK_STUDIO;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+
   const [service, setService] = useState<string>("");
   const [mode, setMode] = useState<"online" | "studio">("online");
   const [date, setDate] = useState<string>("");
@@ -54,6 +89,7 @@ export default function BookingClient({ services, today, maxDaysAhead, openWeekd
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState<{ reference: string; meetLink: string | null } | null>(null);
+  const [tz, setTz] = useState("");
 
   const maxDate = addDays(today, maxDaysAhead);
   const [month, setMonth] = useState(() => {
@@ -62,6 +98,18 @@ export default function BookingClient({ services, today, maxDaysAhead, openWeekd
   });
 
   const svc = services.find((s) => s.id === service);
+  const slotLabel = slots?.find((s) => s.time === time)?.label ?? time;
+  const local = localLabel(date, time, tz);
+  const tzName = tz.replace(/_/g, " ");
+
+  /* visitor's time zone (after mount, to avoid hydration mismatch) */
+  useEffect(() => {
+    try {
+      setTz(Intl.DateTimeFormat().resolvedOptions().timeZone || "");
+    } catch {
+      setTz("");
+    }
+  }, []);
 
   /* load slots when date changes */
   useEffect(() => {
@@ -107,7 +155,19 @@ export default function BookingClient({ services, today, maxDaysAhead, openWeekd
       return n < 1 ? { y: y - 1, m: 12 } : n > 12 ? { y: y + 1, m: 1 } : { y, m: n };
     });
 
-  const ready = service && date && time && form.name.trim().length > 1 && /\S+@\S+\.\S+/.test(form.email) && form.phone.trim().length >= 7;
+  const nameOk = form.name.trim().length > 1;
+  const emailOk = /\S+@\S+\.\S+/.test(form.email);
+  const phoneOk = form.phone.trim().length >= 7;
+  const ready = Boolean(service && date && time && nameOk && emailOk && phoneOk);
+
+  const missing = [
+    !service && "a service",
+    !date && "a date",
+    date && !time && "a time",
+    !nameOk && "your name",
+    !phoneOk && "your phone",
+    !emailOk && "a valid email",
+  ].filter(Boolean) as string[];
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -141,7 +201,6 @@ export default function BookingClient({ services, today, maxDaysAhead, openWeekd
 
   /* ------------------------------ success ------------------------------ */
   if (done && svc) {
-    const label = slots?.find((s) => s.time === time)?.label ?? time;
     return (
       <div className="v-pop relative mx-auto max-w-xl overflow-hidden rounded-3xl bg-gradient-to-br from-ink via-ink-mid to-ink p-10 text-center text-ivory shadow-[0_30px_70px_-30px_var(--color-ink)]">
         <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
@@ -151,14 +210,30 @@ export default function BookingClient({ services, today, maxDaysAhead, openWeekd
         <h2 className="mb-2 font-display text-3xl font-light">
           <span className="v-grad-gold">Request received</span>
         </h2>
-        <p className="mb-6 text-ivory/75">We will confirm your appointment shortly. You will get an email at {form.email} once it is confirmed, with the calendar invite.</p>
+        <p className="mb-2 text-ivory/80">Your slot is requested, not yet confirmed.</p>
+        <p className="mb-6 text-ivory/75">
+          {confirmLine(svc.advance, confirmHours)} Details go to {form.email}.
+        </p>
         <div className="mb-6 rounded-2xl border border-white/15 bg-white/5 p-5 text-left text-sm">
           <p className="font-semibold text-gold-soft">{svc.name}</p>
-          <p className="mt-1 text-ivory/80">{pretty(date)} · {label} IST</p>
+          <p className="mt-1 text-ivory/80">
+            {pretty(date)} · {slotLabel} IST
+          </p>
+          {local && (
+            <p className="mt-1 text-ivory/70">
+              Your time: {local} ({tzName})
+            </p>
+          )}
+          <p className="mt-1 text-ivory/70">{mode === "online" ? "Online (Google Meet)" : `At the studio · ${address}`}</p>
           {done.reference && <p className="mt-3 text-xs text-ivory/50">Reference: {done.reference}</p>}
         </div>
         {done.meetLink && (
-          <a href={done.meetLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-gold-soft to-gold px-6 py-3 text-sm font-semibold text-ink">
+          <a
+            href={done.meetLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-gold-soft to-gold px-6 py-3 text-sm font-semibold text-ink"
+          >
             <Video size={16} /> Open Google Meet link
           </a>
         )}
@@ -170,6 +245,15 @@ export default function BookingClient({ services, today, maxDaysAhead, openWeekd
   return (
     <form onSubmit={submit} className="grid gap-8 lg:grid-cols-12">
       <div className="space-y-8 lg:col-span-8">
+        {/* how booking works: the single source of truth for what happens next */}
+        <div className="v-reveal flex items-start gap-3 rounded-2xl border border-gold/40 bg-gold/10 p-4 text-sm text-charcoal">
+          <Info size={18} className="mt-0.5 shrink-0 text-gold-deep" />
+          <p>
+            <span className="font-semibold">How booking works: </span>
+            send your request below, then {confirmLine(svc?.advance, confirmHours).replace(/^Pay/, "pay")}
+          </p>
+        </div>
+
         {/* 1 service */}
         <div className="v-reveal rounded-3xl border border-line bg-white/80 p-6 backdrop-blur sm:p-8">
           <StepTitle n={1}>Choose a service</StepTitle>
@@ -186,17 +270,29 @@ export default function BookingClient({ services, today, maxDaysAhead, openWeekd
               >
                 <span className="block font-display text-base text-charcoal">{s.name}</span>
                 <span className="mt-1 flex items-center gap-3 text-xs text-charcoal/60">
-                  <span className="flex items-center gap-1"><Clock size={12} /> {s.duration}</span>
+                  <span className="flex items-center gap-1">
+                    <Clock size={12} /> {s.duration}
+                  </span>
+                  {rupees(s.price) && <span className="font-medium text-charcoal/80">{rupees(s.price)}</span>}
                 </span>
               </button>
             ))}
           </div>
+          <p className="mt-3 text-xs text-charcoal/60">
+            Looking for a service that isn&apos;t listed here?{" "}
+            <a href="/contact" className="font-medium text-gold-deep underline underline-offset-2">
+              Contact us to book it
+            </a>
+            .
+          </p>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {([
-              ["online", "Online (Google Meet)", Video],
-              ["studio", "At the studio", MapPin],
-            ] as const).map(([v, label, Icon]) => (
+            {(
+              [
+                ["online", "Online (Google Meet)", Video],
+                ["studio", "At the studio", MapPin],
+              ] as const
+            ).map(([v, label, Icon]) => (
               <button
                 type="button"
                 key={v}
@@ -210,7 +306,24 @@ export default function BookingClient({ services, today, maxDaysAhead, openWeekd
               </button>
             ))}
           </div>
-          {mode === "studio" && <p className="mt-3 text-xs leading-relaxed text-charcoal/60">{studioAddress}</p>}
+
+          {mode === "studio" && (
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-gold/40 bg-gold/10 p-4">
+              <MapPin size={18} className="mt-0.5 shrink-0 text-gold-deep" />
+              <div className="text-sm">
+                <p className="font-medium text-charcoal">Studio address</p>
+                <address className="mt-1 not-italic leading-relaxed text-charcoal/75">{address}</address>
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-block text-xs font-medium text-gold-deep underline underline-offset-2"
+                >
+                  Open in Google Maps
+                </a>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 2 date + time */}
@@ -222,13 +335,19 @@ export default function BookingClient({ services, today, maxDaysAhead, openWeekd
                 <button type="button" onClick={() => step(-1)} disabled={!canPrev} aria-label="Previous month" className="grid h-9 w-9 place-items-center rounded-full border border-line disabled:opacity-30">
                   <ChevronLeft size={16} />
                 </button>
-                <span className="font-display text-base text-charcoal">{MONTHS[month.m - 1]} {month.y}</span>
+                <span className="font-display text-base text-charcoal">
+                  {MONTHS[month.m - 1]} {month.y}
+                </span>
                 <button type="button" onClick={() => step(1)} disabled={!canNext} aria-label="Next month" className="grid h-9 w-9 place-items-center rounded-full border border-line disabled:opacity-30">
                   <ChevronRight size={16} />
                 </button>
               </div>
               <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-charcoal/50">
-                {DOW.map((d) => <span key={d} className="py-1">{d}</span>)}
+                {DOW.map((d) => (
+                  <span key={d} className="py-1">
+                    {d}
+                  </span>
+                ))}
               </div>
               <div className="grid grid-cols-7 gap-1">
                 {cells.map((c, i) =>
@@ -259,7 +378,9 @@ export default function BookingClient({ services, today, maxDaysAhead, openWeekd
             <div>
               <p className="mb-3 text-sm text-charcoal/70">{date ? pretty(date) : "Select a date to see available times"}</p>
               {date && slots === null && !slotsErr && (
-                <p className="flex items-center gap-2 text-sm text-charcoal/60"><Loader2 size={15} className="animate-spin" /> Checking availability…</p>
+                <p className="flex items-center gap-2 text-sm text-charcoal/60">
+                  <Loader2 size={15} className="animate-spin" /> Checking availability…
+                </p>
               )}
               {slotsErr && <p className="text-sm text-red-600">{slotsErr}</p>}
               {slots && slots.length === 0 && <p className="text-sm text-charcoal/60">No times left on this day. Please choose another date.</p>}
@@ -280,7 +401,20 @@ export default function BookingClient({ services, today, maxDaysAhead, openWeekd
                   ))}
                 </div>
               )}
-              <p className="mt-3 text-[11px] text-charcoal/45">All times are Indian Standard Time (IST).</p>
+
+              {/* time zone: readable, and converted for overseas visitors */}
+              <div className="mt-4 rounded-xl border border-line bg-white/70 p-3 text-xs leading-relaxed text-charcoal/75">
+                <p>
+                  <span className="font-semibold text-charcoal">All times are Indian Standard Time (IST, UTC+5:30).</span>
+                </p>
+                {local ? (
+                  <p className="mt-1">
+                    Your selected slot in your time: <span className="font-semibold text-charcoal">{local}</span> ({tzName})
+                  </p>
+                ) : tz && !IST_ZONES.includes(tz) ? (
+                  <p className="mt-1">Pick a time to see it in your local time ({tzName}).</p>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
@@ -289,10 +423,17 @@ export default function BookingClient({ services, today, maxDaysAhead, openWeekd
         <div className="v-reveal rounded-3xl border border-line bg-white/80 p-6 backdrop-blur sm:p-8">
           <StepTitle n={3}>Your details</StepTitle>
           <div className="grid gap-4 sm:grid-cols-2">
-            <input className={field} placeholder="Full name" autoComplete="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            <input className={field} placeholder="Phone / WhatsApp" autoComplete="tel" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            <input className={`${field} sm:col-span-2`} type="email" placeholder="Email" autoComplete="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-            <textarea className={`${field} sm:col-span-2`} rows={3} placeholder="Anything you'd like to share before the session? (optional)" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
+            <input className={field} aria-label="Full name" placeholder="Full name" autoComplete="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <input className={field} aria-label="Phone or WhatsApp" placeholder="Phone / WhatsApp" autoComplete="tel" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <input className={`${field} sm:col-span-2`} aria-label="Email" type="email" placeholder="Email" autoComplete="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            <textarea
+              className={`${field} sm:col-span-2`}
+              aria-label="Message"
+              rows={3}
+              placeholder="Anything you'd like to share before the session? (optional)"
+              value={form.message}
+              onChange={(e) => setForm({ ...form, message: e.target.value })}
+            />
             {/* honeypot: hidden from humans */}
             <input tabIndex={-1} autoComplete="off" aria-hidden className="hidden" name="website" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
           </div>
@@ -307,18 +448,60 @@ export default function BookingClient({ services, today, maxDaysAhead, openWeekd
             <CalendarCheck size={13} /> Your booking
           </span>
           <dl className="space-y-4 text-sm">
-            <div><dt className="text-ivory/50">Service</dt><dd className="font-display text-lg">{svc?.name ?? "—"}</dd></div>
-            <div><dt className="text-ivory/50">Mode</dt><dd>{mode === "online" ? "Online (Google Meet)" : "At the studio"}</dd></div>
-            <div><dt className="text-ivory/50">When</dt><dd>{date && time ? `${pretty(date)} · ${slots?.find((s) => s.time === time)?.label}` : "—"}</dd></div>
+            <div>
+              <dt className="text-ivory/60">Service</dt>
+              <dd className="font-display text-lg">{svc?.name ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-ivory/60">Mode</dt>
+              <dd>{mode === "online" ? "Online (Google Meet)" : "At the studio"}</dd>
+              {mode === "studio" && <dd className="mt-1 text-xs leading-relaxed text-ivory/70">{address}</dd>}
+            </div>
+            <div>
+              <dt className="text-ivory/60">When</dt>
+              <dd>{date && time ? `${pretty(date)} · ${slotLabel} IST` : "—"}</dd>
+              {date && time && local && (
+                <dd className="mt-1 text-xs text-ivory/70">
+                  Your time: {local} ({tzName})
+                </dd>
+              )}
+            </div>
+            <div className="border-t border-white/10 pt-4">
+              <dt className="text-ivory/60">Price</dt>
+              <dd>{rupees(svc?.price) ?? "₹0"}</dd>
+            </div>
+            <div>
+              <dt className="text-ivory/60">Advance to confirm</dt>
+              <dd className="font-display text-lg text-gold-soft">{rupees(svc?.advance) ?? "-"}</dd>
+            </div>
           </dl>
-          {error && <p role="alert" className="mt-5 rounded-xl bg-red-500/15 px-3 py-2 text-sm text-red-200">{error}</p>}
+
+          {error && (
+            <p role="alert" className="mt-5 rounded-xl bg-red-500/15 px-3 py-2 text-sm text-red-200">
+              {error}
+            </p>
+          )}
+
           <button
             type="submit"
             disabled={!ready || busy}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-br from-gold-soft to-gold px-6 py-3.5 text-sm font-semibold text-ink transition hover:shadow-[0_12px_30px_-10px_var(--color-gold)] disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-br from-gold-soft to-gold px-6 py-3.5 text-sm font-semibold text-ink transition hover:shadow-[0_12px_30px_-10px_var(--color-gold)] disabled:cursor-not-allowed disabled:bg-none disabled:bg-white/15 disabled:text-ivory/70 disabled:shadow-none"
           >
-            {busy ? <><Loader2 size={16} className="animate-spin" /> Booking…</> : "Request appointment"}
+            {busy ? (
+              <>
+                <Loader2 size={16} className="animate-spin" /> Booking…
+              </>
+            ) : rupees(svc?.advance) ? (
+              `Request appointment · ${rupees(svc?.advance)} advance`
+            ) : (
+              "Request appointment"
+            )}
           </button>
+
+          {!ready && missing.length > 0 && (
+            <p className="mt-3 text-xs leading-relaxed text-ivory/65">Still needed: {missing.join(", ")}.</p>
+          )}
+          <p className="mt-3 text-xs leading-relaxed text-ivory/65">{confirmLine(svc?.advance, confirmHours)}</p>
         </div>
       </aside>
     </form>
