@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { pool } from "@/lib/db";
 import { rateLimitOrError } from "@/lib/rateLimit";
@@ -32,20 +31,13 @@ export async function POST(request: NextRequest) {
 
     const courseId = Number(body.course_id);
     const name = typeof body.name === "string" ? body.name.trim() : "";
-    const email = typeof body.email === "string"
-      ? body.email.trim().toLowerCase()
-      : "";
-    const phone = typeof body.phone === "string"
-      ? body.phone.trim()
-      : "";
-
-    const bestTime = typeof body.best_time === "string"
-      ? body.best_time.trim()
-      : "";
-
-    const message = typeof body.message === "string"
-      ? body.message.trim()
-      : "";
+    const email =
+      typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const phone = typeof body.phone === "string" ? body.phone.trim() : "";
+    const bestTime =
+      typeof body.best_time === "string" ? body.best_time.trim() : "";
+    const message =
+      typeof body.message === "string" ? body.message.trim() : "";
 
     const courseTitle =
       typeof body.course_title === "string" && body.course_title.trim()
@@ -61,12 +53,12 @@ export async function POST(request: NextRequest) {
       !phone
     ) {
       return NextResponse.json(
-        { error: "Please enter valid course and contact details." },
+        { success: false, error: "Please enter valid course and contact details." },
         { status: 400 }
       );
     }
 
-    // Prepare message for the general leads table
+    // Message for the general leads table
     const leadMessage = [
       `Course Enquiry: ${courseTitle}`,
       `Course ID: ${courseId}`,
@@ -78,11 +70,10 @@ export async function POST(request: NextRequest) {
 
     // Save both records in one database transaction
     connection = await pool.getConnection();
-
     await connection.beginTransaction();
 
     try {
-      // 1. Save course-specific enquiry
+      // 1. Course-specific enquiry
       await connection.execute(
         `INSERT INTO course_enrollments
           (
@@ -95,17 +86,10 @@ export async function POST(request: NextRequest) {
             status
           )
          VALUES (?, ?, ?, ?, ?, ?, 'PENDING')`,
-        [
-          courseId,
-          name,
-          email,
-          phone,
-          bestTime || null,
-          message || null,
-        ]
+        [courseId, name, email, phone, bestTime || null, message || null]
       );
 
-      // 2. Save the same enquiry in the general leads table
+      // 2. General leads table
       await connection.execute(
         `INSERT INTO leads
           (
@@ -119,56 +103,69 @@ export async function POST(request: NextRequest) {
             status
           )
          VALUES (?, ?, ?, NULL, ?, 'course_enquiry', ?, 'NEW')`,
-        [
-          name,
-          email,
-          phone,
-          leadMessage,
-          JSON.stringify({}),
-        ]
+        [name, email, phone, leadMessage, JSON.stringify({})]
       );
 
       await connection.commit();
-
-    } catch (dbError) {
+    } catch (dbError: any) {
       await connection.rollback();
+
+      // Same email already enquired for this course (unique_course_customer)
+      if (dbError?.code === "ER_DUP_ENTRY") {
+        return NextResponse.json(
+          {
+            success: false,
+            duplicate: true,
+            error:
+              "You have already submitted an enquiry for this course. We will contact you soon.",
+          },
+          { status: 409 }
+        );
+      }
+
       throw dbError;
     }
 
-    // 3. Send admin notification email
-    const adminEmail = getAdminNotificationEmail();
+    // 3. Admin notification email (must never break the response)
+    let emailSent = false;
+    try {
+      const adminEmail = getAdminNotificationEmail();
 
-    if (!adminEmail) {
-      console.error(
-        "Course enquiry saved, but ADMIN_NOTIFICATION_EMAIL is missing."
-      );
-    } else {
-      const emailResult = await sendEmail({
-        to: adminEmail,
-        replyTo: email,
-        ...adminLeadNotificationEmail({
-          name,
-          email,
-          phone,
-          message: leadMessage,
-          source: "course_enquiry",
-        }),
-      });
-
-      if (!emailResult) {
+      if (!adminEmail) {
         console.error(
-          "Course enquiry saved, but admin notification email failed."
+          "Course enquiry saved, but ADMIN_NOTIFICATION_EMAIL is missing."
         );
+      } else {
+        const emailResult = await sendEmail({
+          to: adminEmail,
+          replyTo: email,
+          ...adminLeadNotificationEmail({
+            name,
+            email,
+            phone,
+            message: leadMessage,
+            source: "course_enquiry",
+          }),
+        });
+
+        emailSent = !!emailResult;
+
+        if (!emailResult) {
+          console.error(
+            "Course enquiry saved, but admin notification email failed."
+          );
+        }
       }
+    } catch (mailError) {
+      console.error("Admin notification email threw an error:", mailError);
     }
 
-    // 4. Return success
+    // 4. Success
     return NextResponse.json({
       success: true,
       message: "Your course enquiry has been submitted successfully.",
-      emailSent: !!adminEmail,
+      emailSent,
     });
-
   } catch (error) {
     console.error("Course enquiry API error:", error);
 
@@ -179,7 +176,6 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
-
   } finally {
     connection?.release();
   }

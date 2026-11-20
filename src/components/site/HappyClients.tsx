@@ -24,9 +24,9 @@ const videoData = [
   },
   {
     id: 2,
-    embedUrl: "https://www.youtube.com/embed/KWNGTSguHvo",
-    title: "Actress Testimonial",
-    description: "A journey from confusion to confidence with Rituu's sessions.",
+    embedUrl: "https://www.youtube.com/embed/kVYxtNK2YmA",
+    title: "Sanjay Gagnani and Poonam preet-Actor Testimonial",
+    description: "Experience the positive energy with Rituu's guidance",
     featured: true,
     badge: "Featured",
     starRating: 5,
@@ -51,8 +51,8 @@ const videoData = [
   },
   {
     id: 5,
-    embedUrl: "https://www.youtube.com/embed/f-UkZZPwNRE?si=i0h2YYOIIg2uI77W",
-    title: "Vaastu & Tarot Card Feedback",
+    embedUrl: "https://www.youtube.com/embed/KWNGTSguHvo",
+    title: "Vaastu & Reiki Healing Feedback",
     description: "Real transformation through Rituu's sessions.",
     featured: false,
     badge: "Client Story",
